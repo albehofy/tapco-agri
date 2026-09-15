@@ -11,3 +11,5 @@
 10 verbose logfile /run/media/devoryx/Storage/tapco/dashboard/.tmp_home/.npm/_logs/2026-09-15T14_15_52_336Z-debug-0.log
 11 silly logfile done cleaning log files
 12 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with EAI_AGAIN
+13 http fetch GET https://registry.npmjs.org/npm attempt 2 failed with EAI_AGAIN
+14 http fetch GET https://registry.npmjs.org/npm attempt 3 failed with EAI_AGAIN
