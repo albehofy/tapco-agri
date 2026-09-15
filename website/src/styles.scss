@@ -1,0 +1,283 @@
+/* ==========================================================================
+   TAPCO Agriculture - Design System & Global Styles
+   Identity: Agricultural Forest Green & Refined Bronze/Copper
+   ========================================================================== */
+
+:root {
+  /* Brand Colors */
+  --tapco-green-900: #0a261e;
+  --tapco-green-800: #0e3329;
+  --tapco-green-700: #124336;
+  --tapco-green-600: #185948;
+  --tapco-green-500: #227660;
+  --tapco-green-100: #dcf0e8;
+  --tapco-green-50:  #eef7f3;
+
+  /* Bronze / Copper Accents (Matching TAPCO typography branding) */
+  --tapco-bronze-700: #8c5d25;
+  --tapco-bronze-600: #a97334;
+  --tapco-bronze-500: #c48a44;
+  --tapco-bronze-400: #d8a25f;
+  --tapco-bronze-100: #faebd9;
+  --tapco-bronze-50:  #fdf7f0;
+
+  /* Neutrals & Surfaces */
+  --tapco-bg-page: #fbfbfa;
+  --tapco-bg-surface: #ffffff;
+  --tapco-bg-muted: #f4f5f1;
+  --tapco-text-main: #14201b;
+  --tapco-text-muted: #53645e;
+  --tapco-text-light: #7c8e87;
+  --tapco-border: #e2e8e4;
+  --tapco-border-subtle: #edf1ee;
+
+  /* Semantic */
+  --tapco-success: #15803d;
+  --tapco-warning: #b45309;
+  --tapco-danger: #b91c1c;
+  --tapco-info: #0369a1;
+
+  /* Layout & Spacing */
+  --container-max: 1280px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 3px rgba(10, 38, 30, 0.05);
+  --shadow-md: 0 4px 14px rgba(10, 38, 30, 0.08);
+  --shadow-lg: 0 10px 30px rgba(10, 38, 30, 0.12);
+
+  /* Typography */
+  --font-arabic: 'IBM Plex Sans Arabic', 'Cairo', sans-serif;
+  --font-latin: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-arabic);
+  background-color: var(--tapco-bg-page);
+  color: var(--tapco-text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+html[lang="en"] body {
+  font-family: var(--font-latin);
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Layout Utilities */
+.tapco-container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+@media (max-width: 360px) {
+  .tapco-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* Typography styles */
+.text-bronze { color: var(--tapco-bronze-500); }
+.text-green { color: var(--tapco-green-700); }
+.text-muted { color: var(--tapco-text-muted); }
+.text-light { color: var(--tapco-text-light); }
+
+.section-title {
+  font-size: clamp(1.4rem, 2.5vw, 2.25rem);
+  font-weight: 700;
+  color: var(--tapco-green-900);
+  line-height: 1.3;
+}
+
+.section-subtitle {
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+  color: var(--tapco-text-muted);
+  max-width: 650px;
+  margin-top: 0.5rem;
+}
+
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.825rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-tag.bronze {
+  background-color: var(--tapco-bronze-100);
+  color: var(--tapco-bronze-700);
+  border: 1px solid rgba(196, 138, 68, 0.3);
+}
+
+.badge-tag.green {
+  background-color: var(--tapco-green-100);
+  color: var(--tapco-green-800);
+  border: 1px solid rgba(18, 67, 54, 0.2);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--tapco-green-700) 0%, var(--tapco-green-800) 100%);
+  color: #ffffff;
+  border: 1px solid var(--tapco-green-900);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--tapco-green-600) 0%, var(--tapco-green-700) 100%);
+  box-shadow: 0 6px 20px rgba(18, 67, 54, 0.28);
+  transform: translateY(-1px);
+}
+
+.btn-bronze {
+  background: linear-gradient(135deg, var(--tapco-bronze-500) 0%, var(--tapco-bronze-600) 100%);
+  color: #ffffff;
+  border: 1px solid var(--tapco-bronze-700);
+}
+.btn-bronze:hover {
+  background: linear-gradient(135deg, var(--tapco-bronze-400) 0%, var(--tapco-bronze-500) 100%);
+  box-shadow: 0 6px 20px rgba(196, 138, 68, 0.32);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--tapco-green-800);
+  border: 1.5px solid var(--tapco-green-700);
+}
+.btn-outline:hover {
+  background: var(--tapco-green-50);
+  color: var(--tapco-green-900);
+  border-color: var(--tapco-green-800);
+}
+
+.btn-whatsapp {
+  background-color: #25D366;
+  color: #ffffff;
+  font-weight: 700;
+}
+.btn-whatsapp:hover {
+  background-color: #1eb956;
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Card base */
+.card-base {
+  background-color: var(--tapco-bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--tapco-border);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.card-base:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(18, 67, 54, 0.25);
+  transform: translateY(-3px);
+}
+
+/* Formulation badges */
+.formulation-badge {
+  font-family: var(--font-latin);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  background: var(--tapco-green-100);
+  color: var(--tapco-green-900);
+}
+
+/* Toxicity badges */
+.tox-badge-I { background: #fee2e2; color: #991b1b; }
+.tox-badge-II { background: #fef3c7; color: #92400e; }
+.tox-badge-III { background: #e0f2fe; color: #075985; }
+.tox-badge-IV { background: #dcfce7; color: #166534; }
+
+/* Responsive grid helpers */
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .grid-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Ultra small screen protection (down to 270px) */
+@media (max-width: 320px) {
+  html {
+    font-size: 14px;
+  }
+  .btn {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.85rem;
+    width: 100%;
+  }
+  .badge-tag {
+    font-size: 0.75rem;
+  }
+}
