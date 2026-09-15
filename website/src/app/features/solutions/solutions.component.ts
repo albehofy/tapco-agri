@@ -1,5 +1,4 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { I18nService } from '../../core/services/i18n.service';
 import { ApiService } from '../../core/services/api.service';
 import { Crop, Pest, Product } from '../../core/models/tapco.models';
@@ -9,7 +8,7 @@ import { IconComponent } from '../../shared/components/icon.component';
 @Component({
   selector: 'app-solutions',
   standalone: true,
-  imports: [RouterLink, ProductCardComponent, IconComponent],
+  imports: [ProductCardComponent, IconComponent],
   template: `
     <div class="solutions-page">
       <!-- Page Hero Header -->

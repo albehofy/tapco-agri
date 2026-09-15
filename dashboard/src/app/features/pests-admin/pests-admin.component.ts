@@ -1,5 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Dialog } from 'primeng/dialog';
+import { Select } from 'primeng/select';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Pest } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -7,7 +9,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-pests-admin',
   standalone: true,
-  imports: [FormsModule, AdminIconComponent],
+  imports: [FormsModule, Dialog, Select, AdminIconComponent],
   template: `
     <div class="pests-page">
       <div class="page-header">
@@ -68,68 +70,67 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- Modal -->
-      @if (showModal()) {
-        <div class="modal-backdrop" (click)="closeModal()">
-          <div class="modal-dialog" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-              <h3>{{ modalMode() === 'create' ? 'إضافة آفة / مرض نباتي' : 'تعديل بيانات الآفة' }}</h3>
-              <button class="close-btn" (click)="closeModal()">
-                <app-admin-icon name="x" [size]="20" />
-              </button>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group">
-                <label>اسم الآفة بالعربية <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="formData.name_ar" class="form-input" placeholder="مثال: البياض الدقيقي، سوسة النخيل..." />
-              </div>
-
-              <div class="form-group">
-                <label>اسم الآفة بالإنجليزية <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="formData.name_en" class="form-input" placeholder="e.g. Powdery Mildew, Red Palm Weevil..." />
-              </div>
-
-              <div class="form-group">
-                <label>نوع الآفة / التصنيف البيولوجي <span class="req">*</span></label>
-                <select [(ngModel)]="formData.type" class="form-select">
-                  <option value="insect">حشرة (Insect)</option>
-                  <option value="fungal">مرض فطري (Fungal Disease)</option>
-                  <option value="bacterial">مرض بكتيري (Bacterial Disease)</option>
-                  <option value="weed">حشائش ضارة (Weed)</option>
-                  <option value="nematicide">نيماتودا (Nematode)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>صورة الآفة</label>
-                <input type="file" (change)="onImageSelected($event)" accept="image/*" class="form-file" />
-                @if (imagePreview()) {
-                  <div class="preview-box">
-                    <img [src]="imagePreview()" alt="معاينة" />
-                  </div>
-                }
-              </div>
-
-              @if (errorMessage()) {
-                <div class="alert alert-danger">{{ errorMessage() }}</div>
-              }
-            </div>
-
-            <div class="modal-footer">
-              <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
-              <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="savePest()">
-                @if (isSubmitting()) {
-                  <div class="spinner-sm"></div>
-                  <span>جاري الحفظ...</span>
-                } @else {
-                  <span>حفظ البيانات</span>
-                }
-              </button>
-            </div>
+      <!-- PrimeNG Dialog -->
+      <p-dialog
+        [visible]="showModal()"
+        (visibleChange)="showModal.set($event)"
+        [modal]="true"
+        [header]="modalMode() === 'create' ? 'إضافة آفة / مرض نباتي' : 'تعديل بيانات الآفة'"
+        [style]="{ width: '90vw', maxWidth: '500px' }"
+        [draggable]="false"
+        [resizable]="false"
+        [dismissableMask]="true"
+      >
+        <div class="dialog-content-body pt-2">
+          <div class="form-group">
+            <label>اسم الآفة بالعربية <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.name_ar" class="form-input" placeholder="مثال: البياض الدقيقي، سوسة النخيل..." />
           </div>
+
+          <div class="form-group">
+            <label>اسم الآفة بالإنجليزية <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.name_en" class="form-input" placeholder="e.g. Powdery Mildew, Red Palm Weevil..." />
+          </div>
+
+          <div class="form-group">
+            <label>نوع الآفة / التصنيف البيولوجي <span class="req">*</span></label>
+            <p-select
+              [(ngModel)]="formData.type"
+              [options]="pestTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="اختر تصنيف الآفة"
+              styleClass="w-full"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>صورة الآفة</label>
+            <input type="file" (change)="onImageSelected($event)" accept="image/*" class="form-file" />
+            @if (imagePreview()) {
+              <div class="preview-box">
+                <img [src]="imagePreview()" alt="معاينة" />
+              </div>
+            }
+          </div>
+
+          @if (errorMessage()) {
+            <div class="alert alert-danger mt-3">{{ errorMessage() }}</div>
+          }
         </div>
-      }
+
+        <ng-template pTemplate="footer">
+          <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
+          <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="savePest()">
+            @if (isSubmitting()) {
+              <div class="spinner-sm"></div>
+              <span>جاري الحفظ...</span>
+            } @else {
+              <span>حفظ البيانات</span>
+            }
+          </button>
+        </ng-template>
+      </p-dialog>
     </div>
   `,
   styles: [`
@@ -199,20 +200,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
     .card-actions { display: flex; gap: 0.5rem; width: 100%; justify-content: flex-end; border-top: 1px solid var(--admin-border); padding-top: 0.85rem; }
     .btn-danger-soft { color: #ef4444; border-color: #fee2e2; &:hover { background: #fef2f2; border-color: #fca5a5; } }
 
-    /* Modal */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem;
-    }
-    .modal-dialog {
-      background: #ffffff; border-radius: var(--radius-lg); width: 100%; max-width: 480px; overflow: hidden; box-shadow: var(--shadow-xl);
-    }
-    .modal-header {
-      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--admin-border); display: flex; align-items: center; justify-content: space-between;
-      h3 { margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--admin-green-900); }
-    }
-    .close-btn { background: none; border: none; color: var(--admin-text-muted); cursor: pointer; }
-    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .dialog-content-body { display: flex; flex-direction: column; gap: 1rem; }
+
     .form-group {
       display: flex; flex-direction: column; gap: 0.35rem;
       label { font-size: 0.85rem; font-weight: 600; color: var(--admin-text); }
@@ -222,10 +211,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       margin-top: 0.5rem; width: 70px; height: 70px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--admin-border);
       img { width: 100%; height: 100%; object-fit: cover; }
     }
-    .modal-footer {
-      padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid var(--admin-border); display: flex; justify-content: flex-end; gap: 0.75rem;
-    }
     .loading-state { padding: 3rem; text-align: center; color: var(--admin-text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    .w-full { width: 100%; }
   `]
 })
 export class PestsAdminComponent implements OnInit {
@@ -239,6 +226,14 @@ export class PestsAdminComponent implements OnInit {
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal('');
   readonly imagePreview = signal<string | null>(null);
+
+  readonly pestTypeOptions = [
+    { label: 'حشرة ضارة (Insect)', value: 'insect' },
+    { label: 'مرض فطري (Fungal Disease)', value: 'fungal' },
+    { label: 'مرض بكتيري (Bacterial Disease)', value: 'bacterial' },
+    { label: 'حشائش ضارة (Weed)', value: 'weed' },
+    { label: 'نيماتودا (Nematode)', value: 'nematicide' }
+  ];
 
   selectedFile: File | null = null;
   formData = { name_ar: '', name_en: '', type: 'insect' };

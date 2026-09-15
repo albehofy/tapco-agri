@@ -3,6 +3,29 @@ import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
 
+interface SettingField {
+  ar: string;
+  en: string;
+}
+
+interface AppSettings {
+  phone: SettingField;
+  whatsapp: SettingField;
+  email: SettingField;
+  emergency_hotline: SettingField;
+  address: SettingField;
+  years_experience: SettingField;
+  registered_products: SettingField;
+  authorized_distributors: SettingField;
+  hectares_served: SettingField;
+  about_vision: SettingField;
+  about_mission: SettingField;
+  facebook_url: SettingField;
+  twitter_url: SettingField;
+  linkedin_url: SettingField;
+  youtube_url: SettingField;
+}
+
 @Component({
   selector: 'app-settings-admin',
   standalone: true,
@@ -210,7 +233,7 @@ export class SettingsAdminComponent implements OnInit {
   readonly saveSuccessMessage = signal('');
   readonly saveErrorMessage = signal('');
 
-  settings: Record<string, { ar: string; en: string }> = {
+  settings: AppSettings = {
     phone: { ar: '+966 11 000 0000', en: '+966 11 000 0000' },
     whatsapp: { ar: '+966 50 000 0000', en: '+966 50 000 0000' },
     email: { ar: 'info@tapco-agri.com', en: 'info@tapco-agri.com' },
@@ -237,12 +260,15 @@ export class SettingsAdminComponent implements OnInit {
     this.api.getSettings().subscribe({
       next: (res) => {
         if (res.data) {
-          Object.keys(res.data).forEach((k) => {
-            const val = res.data[k];
-            this.settings[k] = {
-              ar: val.ar || '',
-              en: val.en || val.ar || ''
-            };
+          const keys = Object.keys(res.data) as Array<keyof AppSettings>;
+          keys.forEach((k) => {
+            const val = res.data[k as string];
+            if (val && this.settings[k]) {
+              this.settings[k] = {
+                ar: val.ar || '',
+                en: val.en || val.ar || ''
+              };
+            }
           });
         }
         this.isLoading.set(false);

@@ -1,5 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Dialog } from 'primeng/dialog';
+import { Select } from 'primeng/select';
+import { Password } from 'primeng/password';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { AdminUser, Role } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -7,7 +10,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-users-admin',
   standalone: true,
-  imports: [FormsModule, AdminIconComponent],
+  imports: [FormsModule, Dialog, Select, Password, AdminIconComponent],
   template: `
     <div class="users-page">
       <div class="page-header">
@@ -79,75 +82,83 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- Modal -->
-      @if (showModal()) {
-        <div class="modal-backdrop" (click)="closeModal()">
-          <div class="modal-dialog" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-              <h3>{{ modalMode() === 'create' ? 'إضافة مستخدم جديد' : 'تعديل بيانات المستخدم' }}</h3>
-              <button class="close-btn" (click)="closeModal()">
-                <app-admin-icon name="x" [size]="20" />
-              </button>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group">
-                <label>الاسم بالكامل <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="formData.name" class="form-input" placeholder="اسم المسؤول" />
-              </div>
-
-              <div class="form-group">
-                <label>البريد الإلكتروني <span class="req">*</span></label>
-                <input type="email" [(ngModel)]="formData.email" class="form-input" dir="ltr" placeholder="admin@tapco-agri.com" />
-              </div>
-
-              <div class="form-group">
-                <label>
-                  كلمة المرور
-                  @if (modalMode() === 'edit') {
-                    <span class="text-muted">(اتركها فارغة إذا لم ترغب بتغييرها)</span>
-                  } @else {
-                    <span class="req">*</span>
-                  }
-                </label>
-                <input type="password" [(ngModel)]="formData.password" class="form-input" dir="ltr" placeholder="••••••••" />
-              </div>
-
-              <div class="form-group">
-                <label>الدور الوظيفي <span class="req">*</span></label>
-                <select [(ngModel)]="formData.role_id" class="form-select">
-                  @for (role of roles(); track role.id) {
-                    <option [ngValue]="role.id">{{ role.name }}</option>
-                  }
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="checkbox-label">
-                  <input type="checkbox" [(ngModel)]="formData.is_active" />
-                  <span>الحساب نشط ويمكنه الدخول</span>
-                </label>
-              </div>
-
-              @if (errorMessage()) {
-                <div class="alert alert-danger">{{ errorMessage() }}</div>
-              }
-            </div>
-
-            <div class="modal-footer">
-              <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
-              <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveUser()">
-                @if (isSubmitting()) {
-                  <div class="spinner-sm"></div>
-                  <span>جاري الحفظ...</span>
-                } @else {
-                  <span>حفظ البيانات</span>
-                }
-              </button>
-            </div>
+      <!-- PrimeNG Dialog -->
+      <p-dialog
+        [visible]="showModal()"
+        (visibleChange)="showModal.set($event)"
+        [modal]="true"
+        [header]="modalMode() === 'create' ? 'إضافة مستخدم جديد' : 'تعديل بيانات المستخدم'"
+        [style]="{ width: '90vw', maxWidth: '480px' }"
+        [draggable]="false"
+        [resizable]="false"
+        [dismissableMask]="true"
+      >
+        <div class="dialog-content-body pt-2">
+          <div class="form-group">
+            <label>الاسم بالكامل <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.name" class="form-input" placeholder="اسم المسؤول" />
           </div>
+
+          <div class="form-group">
+            <label>البريد الإلكتروني <span class="req">*</span></label>
+            <input type="email" [(ngModel)]="formData.email" class="form-input" dir="ltr" placeholder="admin@tapco-agri.com" />
+          </div>
+
+          <div class="form-group">
+            <label>
+              كلمة المرور
+              @if (modalMode() === 'edit') {
+                <span class="text-muted">(اتركها فارغة إذا لم ترغب بتغييرها)</span>
+              } @else {
+                <span class="req">*</span>
+              }
+            </label>
+            <p-password
+              [(ngModel)]="formData.password"
+              [toggleMask]="true"
+              [feedback]="false"
+              styleClass="w-full"
+              inputStyleClass="form-input w-full"
+              dir="ltr"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>الدور الوظيفي <span class="req">*</span></label>
+            <p-select
+              [(ngModel)]="formData.role_id"
+              [options]="roleOptions()"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="formData.is_active" />
+              <span>الحساب نشط ويمكنه الدخول</span>
+            </label>
+          </div>
+
+          @if (errorMessage()) {
+            <div class="alert alert-danger mt-3">{{ errorMessage() }}</div>
+          }
         </div>
-      }
+
+        <ng-template pTemplate="footer">
+          <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
+          <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveUser()">
+            @if (isSubmitting()) {
+              <div class="spinner-sm"></div>
+              <span>جاري الحفظ...</span>
+            } @else {
+              <span>حفظ البيانات</span>
+            }
+          </button>
+        </ng-template>
+      </p-dialog>
     </div>
   `,
   styles: [`
@@ -176,20 +187,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       &.delete:hover { color: #ef4444; background: #fef2f2; }
     }
 
-    /* Modal */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem;
-    }
-    .modal-dialog {
-      background: #ffffff; border-radius: var(--radius-lg); width: 100%; max-width: 480px; overflow: hidden; box-shadow: var(--shadow-xl);
-    }
-    .modal-header {
-      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--admin-border); display: flex; align-items: center; justify-content: space-between;
-      h3 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--admin-green-900); }
-    }
-    .close-btn { background: none; border: none; color: var(--admin-text-muted); cursor: pointer; }
-    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .dialog-content-body { display: flex; flex-direction: column; gap: 1rem; }
+
     .form-group {
       display: flex; flex-direction: column; gap: 0.35rem;
       label { font-size: 0.85rem; font-weight: 600; color: var(--admin-text); }
@@ -197,10 +196,9 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       .text-muted { color: var(--admin-text-muted); font-size: 0.75rem; font-weight: normal; }
     }
     .checkbox-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
-    .modal-footer {
-      padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid var(--admin-border); display: flex; justify-content: flex-end; gap: 0.75rem;
-    }
+
     .loading-state { padding: 3rem; text-align: center; color: var(--admin-text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    .w-full { width: 100%; }
   `]
 })
 export class UsersAdminComponent implements OnInit {
@@ -214,6 +212,10 @@ export class UsersAdminComponent implements OnInit {
   readonly editingId = signal<number | null>(null);
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal('');
+
+  readonly roleOptions = computed(() => {
+    return this.roles().map((r) => ({ label: r.name, value: r.id }));
+  });
 
   formData = {
     name: '',

@@ -163,6 +163,7 @@ export interface BlogPost {
   meta_title_en?: string | null;
   meta_description_ar?: string | null;
   meta_description_en?: string | null;
+  created_at?: string;
 }
 
 export interface Branch {

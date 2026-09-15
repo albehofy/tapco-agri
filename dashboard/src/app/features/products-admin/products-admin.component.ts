@@ -1,5 +1,7 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Dialog } from 'primeng/dialog';
+import { Select } from 'primeng/select';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Product, Category, Supplier, Crop, Pest } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -7,7 +9,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-products-admin',
   standalone: true,
-  imports: [FormsModule, AdminIconComponent],
+  imports: [FormsModule, Dialog, Select, AdminIconComponent],
   template: `
     <div class="products-admin-page">
       <!-- Header -->
@@ -35,18 +37,25 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
           />
         </div>
 
-        <select [(ngModel)]="categoryFilter" (change)="loadProducts(1)" class="form-select filter-select">
-          <option value="">كافة الفئات</option>
-          @for (cat of categories(); track cat.id) {
-            <option [value]="cat.id">{{ cat.name_ar }} ({{ cat.name_en }})</option>
-          }
-        </select>
+        <p-select
+          [(ngModel)]="categoryFilter"
+          (onChange)="loadProducts(1)"
+          [options]="categoryFilterOptions()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="كافة الفئات"
+          styleClass="filter-select"
+        />
 
-        <select [(ngModel)]="activeFilter" (change)="loadProducts(1)" class="form-select filter-select">
-          <option value="">كافة الحالات</option>
-          <option value="1">نشط فقط</option>
-          <option value="0">معطل</option>
-        </select>
+        <p-select
+          [(ngModel)]="activeFilter"
+          (onChange)="loadProducts(1)"
+          [options]="activeFilterOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="كافة الحالات"
+          styleClass="filter-select"
+        />
 
         <button class="btn btn-outline" (click)="loadProducts(1)">
           <span>تصفية</span>
@@ -98,39 +107,37 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
                   <td>
                     @if (prod.formulation_code) {
                       <span class="badge badge-gray">{{ prod.formulation_code }}</span>
+                    } @else {
+                      <span>-</span>
                     }
                   </td>
+                  <td>{{ prod.pre_harvest_interval ? prod.pre_harvest_interval + ' يوم' : '-' }}</td>
                   <td>
-                    @if (prod.pre_harvest_interval !== null && prod.pre_harvest_interval !== undefined) {
-                      <span class="badge badge-yellow">{{ prod.pre_harvest_interval }} يوم</span>
-                    } @else {
-                      -
-                    }
-                  </td>
-                  <td>
-                    @if (prod.is_active) {
-                      <span class="badge badge-green">نشط</span>
-                    } @else {
-                      <span class="badge badge-red">معطل</span>
-                    }
+                    <span class="badge" [class.badge-green]="prod.is_active" [class.badge-gray]="!prod.is_active">
+                      {{ prod.is_active ? 'نشط' : 'معطل' }}
+                    </span>
                   </td>
                   <td>
                     @if (prod.is_featured) {
-                      <span class="badge badge-yellow">★ مميز</span>
+                      <span class="badge badge-bronze">مميز</span>
                     } @else {
                       <span class="text-muted">-</span>
                     }
                   </td>
                   <td>
-                    <div class="table-actions">
-                      <button class="btn-icon" (click)="openEditModal(prod)" title="تعديل">
+                    <div class="actions-cell">
+                      <button class="action-btn edit" (click)="openEditModal(prod)" title="تعديل">
                         <app-admin-icon name="edit" [size]="16" />
                       </button>
-                      <button class="btn-icon danger" (click)="deleteProduct(prod.id)" title="حذف">
+                      <button class="action-btn delete" (click)="deleteProduct(prod.id)" title="حذف">
                         <app-admin-icon name="trash" [size]="16" />
                       </button>
                     </div>
                   </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="9" class="text-center py-5 text-muted">لا توجد منتجات مسجلة تطابق هذا البحث</td>
                 </tr>
               }
             </tbody>
@@ -140,269 +147,266 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         <!-- Pagination -->
         @if (lastPage() > 1) {
           <div class="pagination-bar">
-            <button class="btn btn-outline" [disabled]="currentPage() === 1" (click)="loadProducts(currentPage() - 1)">
-              السابق
-            </button>
-            <span class="page-info">{{ currentPage() }} / {{ lastPage() }}</span>
-            <button class="btn btn-outline" [disabled]="currentPage() === lastPage()" (click)="loadProducts(currentPage() + 1)">
-              التالي
-            </button>
+            <button class="btn btn-outline btn-sm" [disabled]="currentPage() === 1" (click)="loadProducts(currentPage() - 1)">السابق</button>
+            <span class="page-info">صفحة {{ currentPage() }} من {{ lastPage() }} (إجمالي {{ total() }} منتج)</span>
+            <button class="btn btn-outline btn-sm" [disabled]="currentPage() === lastPage()" (click)="loadProducts(currentPage() + 1)">التالي</button>
           </div>
         }
       }
 
-      <!-- Add / Edit Modal -->
-      @if (isModalOpen()) {
-        <div class="modal-overlay" (click)="closeModal()">
-          <div class="modal-content large" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-              <h2>{{ isEditing() ? 'تعديل منتج: ' + editingProduct()?.name_ar : 'إضافة منتج زراعي جديد' }}</h2>
-              <button class="btn-icon" (click)="closeModal()">
-                <app-admin-icon name="x" [size]="20" />
-              </button>
-            </div>
-
-            <!-- Tabs -->
-            <div class="modal-tabs">
-              <button class="tab-btn" [class.active]="activeTab === 'ar'" (click)="activeTab = 'ar'">البيانات بالعربية</button>
-              <button class="tab-btn" [class.active]="activeTab === 'en'" (click)="activeTab = 'en'">English Data</button>
-              <button class="tab-btn" [class.active]="activeTab === 'specs'" (click)="activeTab = 'specs'">المواصفات والتصنيف</button>
-              <button class="tab-btn" [class.active]="activeTab === 'targets'" (click)="activeTab = 'targets'">المحاصيل والآفات</button>
-              <button class="tab-btn" [class.active]="activeTab === 'files'" (click)="activeTab = 'files'">الملفات والصور والـ PDF</button>
-            </div>
-
-            <form (submit)="saveProduct($event)" class="modal-form">
-              <!-- Tab 1: Arabic -->
-              @if (activeTab === 'ar') {
-                <div class="tab-pane">
-                  <div class="form-group">
-                    <label class="form-label">الاسم التجاري (بالعربي) *</label>
-                    <input type="text" [(ngModel)]="form.name_ar" name="name_ar" required class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">المادة الفعالة (بالعربي)</label>
-                    <input type="text" [(ngModel)]="form.active_ingredient_ar" name="active_ingredient_ar" class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">المجموعة الكيميائية (بالعربي)</label>
-                    <input type="text" [(ngModel)]="form.chemical_group_ar" name="chemical_group_ar" class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">كلمة التحذير / الإشارة (خطر / تحذير / احترس)</label>
-                    <input type="text" [(ngModel)]="form.hazard_signal_word_ar" name="hazard_signal_word_ar" class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">الوصف وخصائص المركب (بالعربي)</label>
-                    <textarea [(ngModel)]="form.description_ar" name="description_ar" rows="3" class="form-textarea"></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">تعليمات الاستخدام والجرعات (بالعربي)</label>
-                    <textarea [(ngModel)]="form.usage_instructions_ar" name="usage_instructions_ar" rows="3" class="form-textarea"></textarea>
-                  </div>
-                </div>
-              }
-
-              <!-- Tab 2: English -->
-              @if (activeTab === 'en') {
-                <div class="tab-pane" dir="ltr">
-                  <div class="form-group">
-                    <label class="form-label">Trade Name (English) *</label>
-                    <input type="text" [(ngModel)]="form.name_en" name="name_en" required class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Active Ingredient (English)</label>
-                    <input type="text" [(ngModel)]="form.active_ingredient_en" name="active_ingredient_en" class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Chemical Family (English)</label>
-                    <input type="text" [(ngModel)]="form.chemical_group_en" name="chemical_group_en" class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Signal Word (Danger / Warning / Caution)</label>
-                    <input type="text" [(ngModel)]="form.hazard_signal_word_en" name="hazard_signal_word_en" class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Description (English)</label>
-                    <textarea [(ngModel)]="form.description_en" name="description_en" rows="3" class="form-textarea"></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Usage Instructions & Dosages (English)</label>
-                    <textarea [(ngModel)]="form.usage_instructions_en" name="usage_instructions_en" rows="3" class="form-textarea"></textarea>
-                  </div>
-                </div>
-              }
-
-              <!-- Tab 3: Specs -->
-              @if (activeTab === 'specs') {
-                <div class="tab-pane form-grid-2">
-                  <div class="form-group">
-                    <label class="form-label">الفئة *</label>
-                    <select [(ngModel)]="form.category_id" name="category_id" required class="form-select">
-                      <option value="">اختر الفئة</option>
-                      @for (cat of categories(); track cat.id) {
-                        <option [value]="cat.id">{{ cat.name_ar }} ({{ cat.name_en }})</option>
-                      }
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">الشركة المصنعة / المورّد</label>
-                    <select [(ngModel)]="form.supplier_id" name="supplier_id" class="form-select">
-                      <option value="">لا يوجد مورد محدد</option>
-                      @for (sup of suppliers(); track sup.id) {
-                        <option [value]="sup.id">{{ sup.name }}</option>
-                      }
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">التركيز والنوع (مثال: 20% SL أو 72% WP)</label>
-                    <input type="text" [(ngModel)]="form.concentration" name="concentration" class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">كود الصياغة (EC, WP, SC, SL, WG, SG, GR, SP)</label>
-                    <select [(ngModel)]="form.formulation_code" name="formulation_code" class="form-select">
-                      <option value="EC">EC - مستحلب مركز (Emulsifiable Concentrate)</option>
-                      <option value="SC">SC - معلق مركز (Suspension Concentrate)</option>
-                      <option value="SL">SL - سائل مركز قابل للذوبان (Soluble Liquid)</option>
-                      <option value="WP">WP - مسحوق قابل للبلل (Wettable Powder)</option>
-                      <option value="WG">WG - حبيبات قابلة للانتشار (Water Dispersible Granules)</option>
-                      <option value="SG">SG - حبيبات قابلة للذوبان (Water Soluble Granules)</option>
-                      <option value="GR">GR - حبيبات للتربة (Granules)</option>
-                      <option value="SP">SP - مسحوق قابل للذوبان (Soluble Powder)</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">تصنيف السمّية (Toxicity Class)</label>
-                    <select [(ngModel)]="form.toxicity_class" name="toxicity_class" class="form-select">
-                      <option value="I">Class I - شديد السمية (أحمر)</option>
-                      <option value="II">Class II - متوسط السمية (أصفر)</option>
-                      <option value="III">Class III - قليل السمية (أزرق)</option>
-                      <option value="IV">Class IV - آمن / غير سام (أخضر)</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">فترة ما قبل الحصاد PHI (بالأيام)</label>
-                    <input type="number" [(ngModel)]="form.pre_harvest_interval" name="pre_harvest_interval" min="0" class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">سعات العبوات المتوفرة</label>
-                    <input type="text" [(ngModel)]="form.packaging_sizes" name="packaging_sizes" placeholder="مثال: 250 مل، 1 لتر، 5 لتر" class="form-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">ترتيب العرض</label>
-                    <input type="number" [(ngModel)]="form.order" name="order" class="form-input" />
-                  </div>
-
-                  <div class="form-checkboxes">
-                    <label class="checkbox-label">
-                      <input type="checkbox" [(ngModel)]="form.is_active" name="is_active" />
-                      <span>تفعيل ظهور المنتج في الموقع العام</span>
-                    </label>
-
-                    <label class="checkbox-label">
-                      <input type="checkbox" [(ngModel)]="form.is_featured" name="is_featured" />
-                      <span>منتج مميز في الصفحة الرئيسية (Featured)</span>
-                    </label>
-                  </div>
-                </div>
-              }
-
-              <!-- Tab 4: Targets -->
-              @if (activeTab === 'targets') {
-                <div class="tab-pane">
-                  <div class="targets-section">
-                    <h4>المحاصيل الموصى بها (اختر المحاصيل المناسبة):</h4>
-                    <div class="checkbox-grid">
-                      @for (crop of crops(); track crop.id) {
-                        <label class="checkbox-pill" [class.selected]="selectedCropIds.includes(crop.id)">
-                          <input type="checkbox" [checked]="selectedCropIds.includes(crop.id)" (change)="toggleCrop(crop.id)" />
-                          <span>{{ crop.name_ar }}</span>
-                        </label>
-                      }
-                    </div>
-                  </div>
-
-                  <div class="targets-section" style="margin-top: 1.5rem;">
-                    <h4>الآفات والأمراض المستهدفة (اختر الآفات التي يكافحها المنتج):</h4>
-                    <div class="checkbox-grid">
-                      @for (pest of pests(); track pest.id) {
-                        <label class="checkbox-pill" [class.selected]="selectedPestIds.includes(pest.id)">
-                          <input type="checkbox" [checked]="selectedPestIds.includes(pest.id)" (change)="togglePest(pest.id)" />
-                          <span>{{ pest.name_ar }} ({{ pest.type }})</span>
-                        </label>
-                      }
-                    </div>
-                  </div>
-                </div>
-              }
-
-              <!-- Tab 5: Files -->
-              @if (activeTab === 'files') {
-                <div class="tab-pane">
-                  <div class="file-upload-block">
-                    <label class="form-label">الصورة الرئيسية للمنتج (jpg, png, webp - بحد أقصى 2MB)</label>
-                    <input type="file" (change)="onMainImageSelected($event)" accept="image/*" class="form-input" />
-                    @if (isEditing() && editingProduct()?.main_image_url) {
-                      <div class="preview-mini">
-                        <span>الصورة الحالية:</span>
-                        <img [src]="editingProduct()!.main_image_url!" alt="Current" />
-                      </div>
-                    }
-                  </div>
-
-                  <div class="file-upload-block">
-                    <label class="form-label">النشرة الفنية للمنتج Datasheet (PDF فقط - بحد أقصى 10MB)</label>
-                    <input type="file" (change)="onDatasheetSelected($event)" accept=".pdf,application/pdf" class="form-input" />
-                    @if (isEditing() && editingProduct()?.datasheet_pdf_url) {
-                      <div class="file-status">ملف PDF مرفوع حاليًا: <a [href]="editingProduct()!.datasheet_pdf_url!" target="_blank">معاينة الملف</a></div>
-                    }
-                  </div>
-
-                  <div class="file-upload-block">
-                    <label class="form-label">صحيفة بيانات السلامة MSDS (PDF فقط - بحد أقصى 10MB)</label>
-                    <input type="file" (change)="onMsdsSelected($event)" accept=".pdf,application/pdf" class="form-input" />
-                    @if (isEditing() && editingProduct()?.msds_pdf_url) {
-                      <div class="file-status">ملف MSDS مرفوع حاليًا: <a [href]="editingProduct()!.msds_pdf_url!" target="_blank">معاينة الملف</a></div>
-                    }
-                  </div>
-
-                  <div class="file-upload-block">
-                    <label class="form-label">صور إضافية لمعرض الصور (Gallery - اختيار متعدد)</label>
-                    <input type="file" multiple (change)="onGallerySelected($event)" accept="image/*" class="form-input" />
-                  </div>
-                </div>
-              }
-
-              @if (formError()) {
-                <div class="error-box">{{ formError() }}</div>
-              }
-
-              <div class="modal-footer">
-                <button type="button" class="btn btn-outline" (click)="closeModal()">إلغاء</button>
-                <button type="submit" [disabled]="isSaving()" class="btn btn-primary">
-                  <span>{{ isSaving() ? 'جاري الحفظ...' : (isEditing() ? 'تحديث المنتج' : 'حفظ المنتج') }}</span>
-                </button>
-              </div>
-            </form>
-          </div>
+      <!-- PrimeNG Dialog for Product Add/Edit -->
+      <p-dialog
+        [visible]="isModalOpen()"
+        (visibleChange)="isModalOpen.set($event)"
+        [modal]="true"
+        [header]="isEditing() ? 'تعديل منتج: ' + editingProduct()?.name_ar : 'إضافة منتج زراعي جديد'"
+        [style]="{ width: '95vw', maxWidth: '840px' }"
+        [draggable]="false"
+        [resizable]="false"
+        [dismissableMask]="true"
+      >
+        <!-- Tabs -->
+        <div class="modal-tabs">
+          <button class="tab-btn" [class.active]="activeTab === 'ar'" (click)="activeTab = 'ar'">البيانات بالعربية</button>
+          <button class="tab-btn" [class.active]="activeTab === 'en'" (click)="activeTab = 'en'">English Data</button>
+          <button class="tab-btn" [class.active]="activeTab === 'specs'" (click)="activeTab = 'specs'">المواصفات والتصنيف</button>
+          <button class="tab-btn" [class.active]="activeTab === 'targets'" (click)="activeTab = 'targets'">المحاصيل والآفات</button>
+          <button class="tab-btn" [class.active]="activeTab === 'files'" (click)="activeTab = 'files'">الملفات والصور والـ PDF</button>
         </div>
-      }
+
+        <form (submit)="saveProduct($event)" class="modal-form">
+          <!-- Tab 1: Arabic -->
+          @if (activeTab === 'ar') {
+            <div class="tab-pane">
+              <div class="form-group">
+                <label class="form-label">الاسم التجاري (بالعربي) *</label>
+                <input type="text" [(ngModel)]="form.name_ar" name="name_ar" required class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">المادة الفعالة (بالعربي)</label>
+                <input type="text" [(ngModel)]="form.active_ingredient_ar" name="active_ingredient_ar" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">المجموعة الكيميائية (بالعربي)</label>
+                <input type="text" [(ngModel)]="form.chemical_group_ar" name="chemical_group_ar" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">كلمة التحذير / الإشارة (خطر / تحذير / احترس)</label>
+                <input type="text" [(ngModel)]="form.hazard_signal_word_ar" name="hazard_signal_word_ar" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">الوصف وخصائص المركب (بالعربي)</label>
+                <textarea [(ngModel)]="form.description_ar" name="description_ar" rows="3" class="form-textarea"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">تعليمات الاستخدام والجرعات (بالعربي)</label>
+                <textarea [(ngModel)]="form.usage_instructions_ar" name="usage_instructions_ar" rows="3" class="form-textarea"></textarea>
+              </div>
+            </div>
+          }
+
+          <!-- Tab 2: English -->
+          @if (activeTab === 'en') {
+            <div class="tab-pane" dir="ltr">
+              <div class="form-group">
+                <label class="form-label">Trade Name (English) *</label>
+                <input type="text" [(ngModel)]="form.name_en" name="name_en" required class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Active Ingredient (English)</label>
+                <input type="text" [(ngModel)]="form.active_ingredient_en" name="active_ingredient_en" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Chemical Family (English)</label>
+                <input type="text" [(ngModel)]="form.chemical_group_en" name="chemical_group_en" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Signal Word (Danger / Warning / Caution)</label>
+                <input type="text" [(ngModel)]="form.hazard_signal_word_en" name="hazard_signal_word_en" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Description (English)</label>
+                <textarea [(ngModel)]="form.description_en" name="description_en" rows="3" class="form-textarea"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Usage Instructions & Dosages (English)</label>
+                <textarea [(ngModel)]="form.usage_instructions_en" name="usage_instructions_en" rows="3" class="form-textarea"></textarea>
+              </div>
+            </div>
+          }
+
+          <!-- Tab 3: Specs -->
+          @if (activeTab === 'specs') {
+            <div class="tab-pane form-grid-2">
+              <div class="form-group">
+                <label class="form-label">الفئة *</label>
+                <p-select
+                  [(ngModel)]="form.category_id"
+                  name="category_id"
+                  [options]="formCategoryOptions()"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="اختر الفئة"
+                  styleClass="w-full"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">الشركة المصنعة / المورّد</label>
+                <p-select
+                  [(ngModel)]="form.supplier_id"
+                  name="supplier_id"
+                  [options]="formSupplierOptions()"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="لا يوجد مورد محدد"
+                  styleClass="w-full"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">التركيز والنوع (مثال: 20% SL أو 72% WP)</label>
+                <input type="text" [(ngModel)]="form.concentration" name="concentration" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">كود الصياغة (EC, WP, SC, SL, WG, SG, GR, SP)</label>
+                <p-select
+                  [(ngModel)]="form.formulation_code"
+                  name="formulation_code"
+                  [options]="formulationCodeOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">تصنيف السمّية (Toxicity Class)</label>
+                <p-select
+                  [(ngModel)]="form.toxicity_class"
+                  name="toxicity_class"
+                  [options]="toxicityOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">فترة ما قبل الحصاد PHI (بالأيام)</label>
+                <input type="number" [(ngModel)]="form.pre_harvest_interval" name="pre_harvest_interval" min="0" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">سعات العبوات المتوفرة</label>
+                <input type="text" [(ngModel)]="form.packaging_sizes" name="packaging_sizes" placeholder="مثال: 250 مل، 1 لتر، 5 لتر" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">ترتيب العرض</label>
+                <input type="number" [(ngModel)]="form.order" name="order" class="form-input" />
+              </div>
+
+              <div class="form-group check-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="form.is_active" name="is_active" />
+                  <span>المنتج نشط ومتاح في الكتالوج العام</span>
+                </label>
+
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="form.is_featured" name="is_featured" />
+                  <span>منتج مميز (يظهر في الصفحة الرئيسية)</span>
+                </label>
+              </div>
+            </div>
+          }
+
+          <!-- Tab 4: Crops & Pests -->
+          @if (activeTab === 'targets') {
+            <div class="tab-pane">
+              <div class="targets-section">
+                <h3>المحاصيل المستهدفة المتوافقة</h3>
+                <div class="checkbox-grid">
+                  @for (crop of crops(); track crop.id) {
+                    <label class="crop-checkbox-card" [class.selected]="isCropSelected(crop.id)">
+                      <input type="checkbox" [checked]="isCropSelected(crop.id)" (change)="toggleCrop(crop.id)" />
+                      <span>{{ crop.name_ar }} ({{ crop.name_en }})</span>
+                    </label>
+                  }
+                </div>
+              </div>
+
+              <div class="targets-section mt-4">
+                <h3>الآفات والأمراض التي يكافحها المنتج</h3>
+                <div class="checkbox-grid">
+                  @for (pest of pests(); track pest.id) {
+                    <label class="pest-checkbox-card" [class.selected]="isPestSelected(pest.id)">
+                      <input type="checkbox" [checked]="isPestSelected(pest.id)" (change)="togglePest(pest.id)" />
+                      <span>{{ pest.name_ar }} ({{ pest.name_en }})</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Tab 5: Files & PDFs -->
+          @if (activeTab === 'files') {
+            <div class="tab-pane">
+              <div class="file-upload-block">
+                <label class="form-label">الصورة الأساسية للمنتج (PNG, JPG, WebP - الحد الأقصى 2MB)</label>
+                <input type="file" (change)="onMainImageSelected($event)" accept="image/*" class="form-input" />
+                @if (mainImagePreview()) {
+                  <div class="img-preview"><img [src]="mainImagePreview()" alt="Preview" /></div>
+                }
+              </div>
+
+              <div class="file-upload-block">
+                <label class="form-label">ملف النشرة الفنية (Datasheet PDF - الحد الأقصى 10MB)</label>
+                <input type="file" (change)="onDatasheetSelected($event)" accept="application/pdf" class="form-input" />
+                @if (isEditing() && editingProduct()?.datasheet_pdf_url) {
+                  <div class="file-status">ملف الداتاشيت مرفوع حاليًا: <a [href]="editingProduct()!.datasheet_pdf_url!" target="_blank">معاينة الملف</a></div>
+                }
+              </div>
+
+              <div class="file-upload-block">
+                <label class="form-label">ملف صحيفة سلامة المواد (MSDS PDF - الحد الأقصى 10MB)</label>
+                <input type="file" (change)="onMsdsSelected($event)" accept="application/pdf" class="form-input" />
+                @if (isEditing() && editingProduct()?.msds_pdf_url) {
+                  <div class="file-status">ملف MSDS مرفوع حاليًا: <a [href]="editingProduct()!.msds_pdf_url!" target="_blank">معاينة الملف</a></div>
+                }
+              </div>
+
+              <div class="file-upload-block">
+                <label class="form-label">صور إضافية لمعرض الصور (Gallery - اختيار متعدد)</label>
+                <input type="file" multiple (change)="onGallerySelected($event)" accept="image/*" class="form-input" />
+              </div>
+            </div>
+          }
+
+          @if (formError()) {
+            <div class="error-box mt-3">{{ formError() }}</div>
+          }
+
+          <div class="modal-footer pt-3">
+            <button type="button" class="btn btn-outline" (click)="closeModal()">إلغاء</button>
+            <button type="submit" [disabled]="isSaving()" class="btn btn-primary">
+              <span>{{ isSaving() ? 'جاري الحفظ...' : (isEditing() ? 'تحديث المنتج' : 'حفظ المنتج') }}</span>
+            </button>
+          </div>
+        </form>
+      </p-dialog>
     </div>
   `,
   styles: [`
@@ -458,8 +462,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
     }
 
     .filter-select {
-      width: auto;
-      min-width: 170px;
+      min-width: 180px;
     }
 
     .prod-thumb {
@@ -471,26 +474,60 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      border: 1px solid var(--admin-border-subtle);
+      color: var(--admin-green-700);
 
       img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
       }
     }
 
     .prod-names {
       display: flex;
       flex-direction: column;
-      strong { color: var(--admin-green-900); }
-      .en-name { font-size: 0.75rem; color: var(--admin-text-muted); font-family: var(--font-latin); }
+
+      strong {
+        color: var(--admin-green-900);
+        font-size: 0.9rem;
+      }
+
+      .en-name {
+        font-family: var(--font-latin);
+        font-size: 0.775rem;
+        color: var(--admin-text-muted);
+      }
     }
 
-    .table-actions {
+    .actions-cell {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.5rem;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--admin-border);
+      background: #ffffff;
+      color: var(--admin-text-muted);
+      transition: all 0.15s ease;
+
+      &.edit:hover {
+        background: var(--admin-green-50);
+        color: var(--admin-green-700);
+        border-color: var(--admin-green-600);
+      }
+
+      &.delete:hover {
+        background: #fee2e2;
+        color: var(--admin-danger);
+        border-color: #fca5a5;
+      }
     }
 
     .pagination-bar {
@@ -499,96 +536,104 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       justify-content: center;
       gap: 1rem;
       margin-top: 1rem;
-    }
 
-    .page-info {
-      font-weight: 600;
-      color: var(--admin-text-muted);
-    }
-
-    /* Modal Tabs */
-    .modal-tabs {
-      display: flex;
-      gap: 0.5rem;
-      border-bottom: 2px solid var(--admin-border-subtle);
-      margin-bottom: 1.5rem;
-      overflow-x: auto;
-    }
-
-    .tab-btn {
-      padding: 0.65rem 1rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--admin-text-muted);
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      white-space: nowrap;
-
-      &.active {
-        color: var(--admin-green-700);
-        border-bottom-color: var(--admin-green-700);
+      .page-info {
+        font-size: 0.85rem;
+        color: var(--admin-text-muted);
       }
     }
 
-    .modal-header {
+    .modal-tabs {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      border-bottom: 1px solid var(--admin-border);
+      gap: 0.5rem;
+      overflow-x: auto;
       margin-bottom: 1rem;
-      h2 { font-size: 1.35rem; color: var(--admin-green-900); }
+
+      .tab-btn {
+        padding: 0.65rem 1rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--admin-text-muted);
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+
+        &.active {
+          color: var(--admin-green-800);
+          border-bottom-color: var(--admin-bronze-500);
+        }
+      }
     }
 
     .tab-pane {
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding-left: 0.5rem;
     }
 
     .form-grid-2 {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.25rem;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+
+      @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+      }
     }
 
-    .form-checkboxes {
+    .check-group {
       grid-column: 1 / -1;
       display: flex;
-      gap: 2rem;
-      margin-top: 0.5rem;
+      flex-direction: column;
+      gap: 0.5rem;
     }
 
     .checkbox-label {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 0.5rem;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       font-weight: 600;
+      color: var(--admin-text);
       cursor: pointer;
+    }
+
+    .targets-section {
+      h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--admin-green-900);
+      }
     }
 
     .checkbox-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 0.65rem;
-      margin-top: 0.75rem;
+      gap: 0.5rem;
     }
 
-    .checkbox-pill {
+    .crop-checkbox-card,
+    .pest-checkbox-card {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem 0.75rem;
       border: 1px solid var(--admin-border);
       border-radius: var(--radius-sm);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       cursor: pointer;
       background: #ffffff;
+      transition: all 0.15s ease;
 
       &.selected {
         background: var(--admin-green-50);
-        border-color: var(--admin-green-700);
+        border-color: var(--admin-green-600);
+        font-weight: 700;
         color: var(--admin-green-900);
-        font-weight: 600;
       }
     }
 
@@ -596,24 +641,31 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
-      padding: 0.75rem;
-      border: 1px dashed var(--admin-border);
-      border-radius: var(--radius-sm);
-      background: #fdfdfd;
-    }
 
-    .preview-mini {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8rem;
-      img { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; }
-    }
+      .img-preview {
+        width: 80px;
+        height: 80px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--admin-border);
+        overflow: hidden;
+        margin-top: 0.5rem;
 
-    .file-status {
-      font-size: 0.8rem;
-      color: var(--admin-text-muted);
-      a { color: var(--admin-green-700); font-weight: 600; text-decoration: underline; }
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+      }
+
+      .file-status {
+        font-size: 0.8rem;
+        color: var(--admin-text-muted);
+
+        a {
+          color: var(--admin-bronze-600);
+          text-decoration: underline;
+        }
+      }
     }
 
     .modal-footer {
@@ -621,43 +673,34 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       align-items: center;
       justify-content: flex-end;
       gap: 0.75rem;
-      margin-top: 2rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--admin-border-subtle);
+      border-top: 1px solid var(--admin-border);
     }
 
     .error-box {
+      padding: 0.75rem;
       background: #fee2e2;
       color: var(--admin-danger);
-      padding: 0.75rem;
       border-radius: var(--radius-sm);
       font-size: 0.85rem;
-      margin-top: 1rem;
     }
 
     .loading-state {
-      padding: 4rem;
+      padding: 3rem;
       text-align: center;
+      color: var(--admin-text-muted);
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 1rem;
     }
 
-    .spinner {
-      width: 36px;
-      height: 36px;
-      border: 3px solid var(--admin-border);
-      border-top-color: var(--admin-green-700);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    .w-full {
+      width: 100%;
     }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
   `]
 })
 export class ProductsAdminComponent implements OnInit {
-  private readonly api = inject AdminApiService;
+  private readonly api = inject(AdminApiService);
 
   readonly products = signal<Product[]>([]);
   readonly categories = signal<Category[]>([]);
@@ -665,30 +708,65 @@ export class ProductsAdminComponent implements OnInit {
   readonly crops = signal<Crop[]>([]);
   readonly pests = signal<Pest[]>([]);
 
-  readonly isLoading = signal(true);
+  readonly isLoading = signal(false);
   readonly isSaving = signal(false);
   readonly isModalOpen = signal(false);
   readonly isEditing = signal(false);
   readonly editingProduct = signal<Product | null>(null);
-  readonly formError = signal('');
 
   readonly currentPage = signal(1);
   readonly lastPage = signal(1);
+  readonly total = signal(0);
 
   search = '';
   categoryFilter = '';
   activeFilter = '';
+
   activeTab: 'ar' | 'en' | 'specs' | 'targets' | 'files' = 'ar';
+  formError = signal('');
 
-  selectedCropIds: number[] = [];
-  selectedPestIds: number[] = [];
+  readonly categoryFilterOptions = computed(() => [
+    { label: 'كافة الفئات', value: '' },
+    ...this.categories().map((c) => ({ label: `${c.name_ar} (${c.name_en})`, value: c.id.toString() }))
+  ]);
 
-  mainImageFile: File | null = null;
-  datasheetPdfFile: File | null = null;
-  msdsPdfFile: File | null = null;
-  galleryFiles: File[] = [];
+  readonly activeFilterOptions = [
+    { label: 'كافة الحالات', value: '' },
+    { label: 'نشط فقط', value: '1' },
+    { label: 'معطل', value: '0' }
+  ];
+
+  readonly formCategoryOptions = computed(() => [
+    { label: 'اختر الفئة *', value: null },
+    ...this.categories().map((c) => ({ label: `${c.name_ar} (${c.name_en})`, value: c.id }))
+  ]);
+
+  readonly formSupplierOptions = computed(() => [
+    { label: 'لا يوجد مورد محدد', value: null },
+    ...this.suppliers().map((s) => ({ label: s.name, value: s.id }))
+  ]);
+
+  readonly formulationCodeOptions = [
+    { label: 'EC - مستحلب مركز (Emulsifiable Concentrate)', value: 'EC' },
+    { label: 'SC - معلق مركز (Suspension Concentrate)', value: 'SC' },
+    { label: 'SL - سائل مركز قابل للذوبان (Soluble Liquid)', value: 'SL' },
+    { label: 'WP - مسحوق قابل للبلل (Wettable Powder)', value: 'WP' },
+    { label: 'WG - حبيبات قابلة للانتشار (Water Dispersible Granules)', value: 'WG' },
+    { label: 'SG - حبيبات قابلة للذوبان (Water Soluble Granules)', value: 'SG' },
+    { label: 'GR - حبيبات للتربة (Granules)', value: 'GR' },
+    { label: 'SP - مسحوق قابل للذوبان (Soluble Powder)', value: 'SP' }
+  ];
+
+  readonly toxicityOptions = [
+    { label: 'Class I - شديد السمية (أحمر)', value: 'I' },
+    { label: 'Class II - متوسط السمية (أصفر)', value: 'II' },
+    { label: 'Class III - قليل السمية (أزرق)', value: 'III' },
+    { label: 'Class IV - آمن / غير سام (أخضر)', value: 'IV' }
+  ];
 
   form: any = {
+    category_id: null,
+    supplier_id: null,
     name_ar: '',
     name_en: '',
     active_ingredient_ar: '',
@@ -703,18 +781,28 @@ export class ProductsAdminComponent implements OnInit {
     usage_instructions_en: '',
     pre_harvest_interval: 7,
     toxicity_class: 'III',
-    hazard_signal_word_ar: 'احترس',
-    hazard_signal_word_en: 'Caution',
-    packaging_sizes: '1 لتر، 5 لتر',
-    category_id: '',
-    supplier_id: '',
-    order: 0,
-    is_active: true,
+    hazard_signal_word_ar: 'تحذير',
+    hazard_signal_word_en: 'Warning',
+    packaging_sizes: '1L, 5L',
     is_featured: false,
+    is_active: true,
+    order: 0,
+    crop_ids: [] as number[],
+    pest_ids: [] as number[]
   };
 
+  mainImageFile: File | null = null;
+  datasheetFile: File | null = null;
+  msdsFile: File | null = null;
+  galleryFiles: File[] = [];
+  mainImagePreview = signal<string | null>(null);
+
   ngOnInit(): void {
+    this.loadFilterMetadata();
     this.loadProducts(1);
+  }
+
+  loadFilterMetadata(): void {
     this.api.getAllCategories().subscribe(res => res.data && this.categories.set(res.data));
     this.api.getSuppliers().subscribe(res => res.data && this.suppliers.set(res.data));
     this.api.getCrops().subscribe(res => res.data && this.crops.set(res.data));
@@ -727,15 +815,13 @@ export class ProductsAdminComponent implements OnInit {
       page,
       search: this.search,
       category_id: this.categoryFilter,
-      is_active: this.activeFilter,
-      per_page: 15,
+      is_active: this.activeFilter
     }).subscribe({
       next: (res) => {
-        this.products.set(res.data || []);
-        if (res.meta) {
-          this.currentPage.set(res.meta.current_page);
-          this.lastPage.set(res.meta.last_page);
-        }
+        this.products.set(res.data);
+        this.currentPage.set(res.meta.current_page);
+        this.lastPage.set(res.meta.last_page);
+        this.total.set(res.meta.total);
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false)
@@ -745,14 +831,11 @@ export class ProductsAdminComponent implements OnInit {
   openCreateModal(): void {
     this.isEditing.set(false);
     this.editingProduct.set(null);
+    this.formError.set('');
     this.activeTab = 'ar';
-    this.selectedCropIds = [];
-    this.selectedPestIds = [];
-    this.mainImageFile = null;
-    this.datasheetPdfFile = null;
-    this.msdsPdfFile = null;
-    this.galleryFiles = [];
     this.form = {
+      category_id: this.categories()[0]?.id || null,
+      supplier_id: null,
       name_ar: '',
       name_en: '',
       active_ingredient_ar: '',
@@ -767,53 +850,59 @@ export class ProductsAdminComponent implements OnInit {
       usage_instructions_en: '',
       pre_harvest_interval: 7,
       toxicity_class: 'III',
-      hazard_signal_word_ar: 'احترس',
-      hazard_signal_word_en: 'Caution',
-      packaging_sizes: '1 لتر، 5 لتر',
-      category_id: this.categories()[0]?.id || '',
-      supplier_id: '',
-      order: 0,
-      is_active: true,
+      hazard_signal_word_ar: 'تحذير',
+      hazard_signal_word_en: 'Warning',
+      packaging_sizes: '1L, 5L',
       is_featured: false,
+      is_active: true,
+      order: 0,
+      crop_ids: [],
+      pest_ids: []
     };
+    this.mainImageFile = null;
+    this.datasheetFile = null;
+    this.msdsFile = null;
+    this.galleryFiles = [];
+    this.mainImagePreview.set(null);
     this.isModalOpen.set(true);
   }
 
-  openEditModal(p: Product): void {
+  openEditModal(prod: Product): void {
     this.isEditing.set(true);
-    this.editingProduct.set(p);
+    this.editingProduct.set(prod);
+    this.formError.set('');
     this.activeTab = 'ar';
-    this.selectedCropIds = p.crops?.map(c => c.id) || [];
-    this.selectedPestIds = p.pests?.map(pest => pest.id) || [];
-    this.mainImageFile = null;
-    this.datasheetPdfFile = null;
-    this.msdsPdfFile = null;
-    this.galleryFiles = [];
-
     this.form = {
-      name_ar: p.name_ar,
-      name_en: p.name_en,
-      active_ingredient_ar: p.active_ingredient_ar || '',
-      active_ingredient_en: p.active_ingredient_en || '',
-      concentration: p.concentration || '',
-      formulation_code: p.formulation_code || 'EC',
-      chemical_group_ar: p.chemical_group_ar || '',
-      chemical_group_en: p.chemical_group_en || '',
-      description_ar: p.description_ar || '',
-      description_en: p.description_en || '',
-      usage_instructions_ar: p.usage_instructions_ar || '',
-      usage_instructions_en: p.usage_instructions_en || '',
-      pre_harvest_interval: p.pre_harvest_interval || 0,
-      toxicity_class: p.toxicity_class || 'III',
-      hazard_signal_word_ar: p.hazard_signal_word_ar || '',
-      hazard_signal_word_en: p.hazard_signal_word_en || '',
-      packaging_sizes: p.packaging_sizes || '',
-      category_id: p.category_id,
-      supplier_id: p.supplier_id || '',
-      order: p.order || 0,
-      is_active: p.is_active,
-      is_featured: p.is_featured,
+      category_id: prod.category_id,
+      supplier_id: prod.supplier_id,
+      name_ar: prod.name_ar,
+      name_en: prod.name_en,
+      active_ingredient_ar: prod.active_ingredient_ar || '',
+      active_ingredient_en: prod.active_ingredient_en || '',
+      concentration: prod.concentration || '',
+      formulation_code: prod.formulation_code || 'EC',
+      chemical_group_ar: prod.chemical_group_ar || '',
+      chemical_group_en: prod.chemical_group_en || '',
+      description_ar: prod.description_ar || '',
+      description_en: prod.description_en || '',
+      usage_instructions_ar: prod.usage_instructions_ar || '',
+      usage_instructions_en: prod.usage_instructions_en || '',
+      pre_harvest_interval: prod.pre_harvest_interval || 0,
+      toxicity_class: prod.toxicity_class || 'III',
+      hazard_signal_word_ar: prod.hazard_signal_word_ar || 'تحذير',
+      hazard_signal_word_en: prod.hazard_signal_word_en || 'Warning',
+      packaging_sizes: prod.packaging_sizes || '',
+      is_featured: prod.is_featured,
+      is_active: prod.is_active,
+      order: prod.order,
+      crop_ids: prod.crops ? prod.crops.map(c => c.id) : [],
+      pest_ids: prod.pests ? prod.pests.map(p => p.id) : []
     };
+    this.mainImageFile = null;
+    this.datasheetFile = null;
+    this.msdsFile = null;
+    this.galleryFiles = [];
+    this.mainImagePreview.set(prod.main_image_url || null);
     this.isModalOpen.set(true);
   }
 
@@ -821,86 +910,104 @@ export class ProductsAdminComponent implements OnInit {
     this.isModalOpen.set(false);
   }
 
+  isCropSelected(id: number): boolean {
+    return this.form.crop_ids.includes(id);
+  }
+
   toggleCrop(id: number): void {
-    if (this.selectedCropIds.includes(id)) {
-      this.selectedCropIds = this.selectedCropIds.filter(i => i !== id);
+    const idx = this.form.crop_ids.indexOf(id);
+    if (idx > -1) {
+      this.form.crop_ids.splice(idx, 1);
     } else {
-      this.selectedCropIds.push(id);
+      this.form.crop_ids.push(id);
     }
   }
 
+  isPestSelected(id: number): boolean {
+    return this.form.pest_ids.includes(id);
+  }
+
   togglePest(id: number): void {
-    if (this.selectedPestIds.includes(id)) {
-      this.selectedPestIds = this.selectedPestIds.filter(i => i !== id);
+    const idx = this.form.pest_ids.indexOf(id);
+    if (idx > -1) {
+      this.form.pest_ids.splice(idx, 1);
     } else {
-      this.selectedPestIds.push(id);
+      this.form.pest_ids.push(id);
     }
   }
 
   onMainImageSelected(e: any): void {
-    if (e.target.files?.[0]) this.mainImageFile = e.target.files[0];
+    const file = e.target.files[0];
+    if (file) {
+      this.mainImageFile = file;
+      const reader = new FileReader();
+      reader.onload = () => this.mainImagePreview.set(reader.result as string);
+      reader.readAsDataURL(file);
+    }
   }
 
   onDatasheetSelected(e: any): void {
-    if (e.target.files?.[0]) this.datasheetPdfFile = e.target.files[0];
+    this.datasheetFile = e.target.files[0] || null;
   }
 
   onMsdsSelected(e: any): void {
-    if (e.target.files?.[0]) this.msdsPdfFile = e.target.files[0];
+    this.msdsFile = e.target.files[0] || null;
   }
 
   onGallerySelected(e: any): void {
-    if (e.target.files) this.galleryFiles = Array.from(e.target.files);
+    if (e.target.files) {
+      this.galleryFiles = Array.from(e.target.files);
+    }
   }
 
   saveProduct(e: Event): void {
     e.preventDefault();
+    if (!this.form.name_ar || !this.form.name_en || !this.form.category_id) {
+      this.formError.set('يرجى ملء الحقول الإلزامية: الاسم بالعربي، الاسم بالإنجليزي، والفئة');
+      return;
+    }
+
     this.isSaving.set(true);
     this.formError.set('');
 
     const fd = new FormData();
-    Object.entries(this.form).forEach(([key, val]) => {
-      if (val !== null && val !== undefined) {
-        if (typeof val === 'boolean') {
-          fd.append(key, val ? '1' : '0');
-        } else {
-          fd.append(key, val.toString());
-        }
+    Object.keys(this.form).forEach(key => {
+      if (key === 'crop_ids' || key === 'pest_ids') {
+        this.form[key].forEach((id: number) => fd.append(`${key}[]`, id.toString()));
+      } else if (this.form[key] !== null && this.form[key] !== undefined) {
+        fd.append(key, typeof this.form[key] === 'boolean' ? (this.form[key] ? '1' : '0') : this.form[key]);
       }
     });
 
-    this.selectedCropIds.forEach(id => fd.append('crop_ids[]', id.toString()));
-    this.selectedPestIds.forEach(id => fd.append('pest_ids[]', id.toString()));
-
     if (this.mainImageFile) fd.append('main_image', this.mainImageFile);
-    if (this.datasheetPdfFile) fd.append('datasheet_pdf', this.datasheetPdfFile);
-    if (this.msdsPdfFile) fd.append('msds_pdf', this.msdsPdfFile);
-    this.galleryFiles.forEach(file => fd.append('gallery_images[]', file));
+    if (this.datasheetFile) fd.append('datasheet_pdf', this.datasheetFile);
+    if (this.msdsFile) fd.append('msds_pdf', this.msdsFile);
+    this.galleryFiles.forEach((file, index) => {
+      fd.append(`gallery_images[${index}]`, file);
+    });
 
-    const req$ = this.isEditing()
+    const request$ = this.isEditing()
       ? this.api.updateProduct(this.editingProduct()!.id, fd)
       : this.api.createProduct(fd);
 
-    req$.subscribe({
+    request$.subscribe({
       next: (res) => {
         this.isSaving.set(false);
-        if (res.success) {
-          this.closeModal();
-          this.loadProducts(this.currentPage());
-        }
+        this.closeModal();
+        this.loadProducts(this.currentPage());
       },
       error: (err) => {
         this.isSaving.set(false);
-        this.formError.set(err?.error?.message || 'فشل حفظ المنتج. يرجى مراجعة الحقول.');
+        this.formError.set(err?.error?.message || 'حدث خطأ أثناء حفظ المنتج، يرجى مراجعة البيانات.');
       }
     });
   }
 
   deleteProduct(id: number): void {
-    if (!confirm('هل أنت متأكد من حذف هذا المنتج؟ سيتم حذف جميع الصور والملفات المرتبطة.')) return;
-
+    if (!confirm('هل أنت متأكد من رغبتك في حذف هذا المنتج نهائيًا؟')) return;
     this.api.deleteProduct(id).subscribe({
-      next: () => this.loadProducts(this.currentPage())
+      next: () => this.loadProducts(this.currentPage()),
+      error: (err) => alert(err?.error?.message || 'تعذر حذف المنتج')
     });
   }
 }

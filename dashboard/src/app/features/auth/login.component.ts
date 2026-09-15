@@ -1,13 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Password } from 'primeng/password';
 import { AuthService } from '../../core/services/auth.service';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, AdminIconComponent],
+  imports: [FormsModule, Password, AdminIconComponent],
   template: `
     <div class="login-page">
       <div class="login-card card-base">
@@ -41,14 +42,15 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 
           <div class="form-group">
             <label class="form-label">كلمة المرور</label>
-            <input
-              type="password"
+            <p-password
               [(ngModel)]="password"
               name="password"
-              required
-              class="form-input"
-              dir="ltr"
+              [toggleMask]="true"
+              [feedback]="false"
+              styleClass="w-full"
+              inputStyleClass="form-input w-full"
               placeholder="••••••••"
+              dir="ltr"
             />
           </div>
 

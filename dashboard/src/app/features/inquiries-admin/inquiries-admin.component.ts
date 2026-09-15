@@ -1,5 +1,8 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Dialog } from 'primeng/dialog';
+import { Select } from 'primeng/select';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Inquiry } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -7,7 +10,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-inquiries-admin',
   standalone: true,
-  imports: [FormsModule, AdminIconComponent],
+  imports: [FormsModule, SlicePipe, Dialog, Select, AdminIconComponent],
   template: `
     <div class="inquiries-page">
       <div class="page-header">
@@ -135,92 +138,94 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         }
       }
 
-      <!-- Detail & Update Modal -->
-      @if (showDetailModal() && activeInquiry()) {
-        <div class="modal-backdrop" (click)="closeDetailModal()">
-          <div class="modal-dialog" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-              <h3>تفاصيل استفسار: {{ activeInquiry()!.name }}</h3>
-              <button class="close-btn" (click)="closeDetailModal()">
-                <app-admin-icon name="x" [size]="20" />
-              </button>
+      <!-- PrimeNG Dialog -->
+      @if (activeInquiry()) {
+        <p-dialog
+          [visible]="showDetailModal()"
+          (visibleChange)="showDetailModal.set($event)"
+          [modal]="true"
+          [header]="'تفاصيل استفسار: ' + activeInquiry()!.name"
+          [style]="{ width: '90vw', maxWidth: '600px' }"
+          [draggable]="false"
+          [resizable]="false"
+          [dismissableMask]="true"
+        >
+          <div class="dialog-content-body pt-2">
+            <div class="inquiry-info-grid">
+              <div class="info-block">
+                <span class="lbl">اسم العميل</span>
+                <span class="val">{{ activeInquiry()!.name }}</span>
+              </div>
+              <div class="info-block">
+                <span class="lbl">رقم الهاتف</span>
+                <span class="val">{{ activeInquiry()!.phone }}</span>
+              </div>
+              <div class="info-block">
+                <span class="lbl">البريد الإلكتروني</span>
+                <span class="val">{{ activeInquiry()!.email || 'غير محدد' }}</span>
+              </div>
+              <div class="info-block">
+                <span class="lbl">المنتج المرتبط</span>
+                <span class="val">{{ activeInquiry()!.product?.name_ar || 'استفسار عام / بدون منتج' }}</span>
+              </div>
+              <div class="info-block">
+                <span class="lbl">تاريخ الإرسال</span>
+                <span class="val">{{ activeInquiry()!.created_at }}</span>
+              </div>
+              <div class="info-block">
+                <span class="lbl">المصدر</span>
+                <span class="val">{{ getSourceText(activeInquiry()!.source) }}</span>
+              </div>
             </div>
 
-            <div class="modal-body">
-              <div class="inquiry-info-grid">
-                <div class="info-block">
-                  <span class="lbl">اسم العميل</span>
-                  <span class="val">{{ activeInquiry()!.name }}</span>
-                </div>
-                <div class="info-block">
-                  <span class="lbl">رقم الهاتف</span>
-                  <span class="val">{{ activeInquiry()!.phone }}</span>
-                </div>
-                <div class="info-block">
-                  <span class="lbl">البريد الإلكتروني</span>
-                  <span class="val">{{ activeInquiry()!.email || 'غير محدد' }}</span>
-                </div>
-                <div class="info-block">
-                  <span class="lbl">المنتج المرتبط</span>
-                  <span class="val">{{ activeInquiry()!.product?.name_ar || 'استفسار عام / بدون منتج' }}</span>
-                </div>
-                <div class="info-block">
-                  <span class="lbl">تاريخ الإرسال</span>
-                  <span class="val">{{ activeInquiry()!.created_at }}</span>
-                </div>
-                <div class="info-block">
-                  <span class="lbl">المصدر</span>
-                  <span class="val">{{ getSourceText(activeInquiry()!.source) }}</span>
-                </div>
-              </div>
-
-              <div class="message-box">
-                <span class="lbl">نص الرسالة والاستفسار:</span>
-                <p class="msg-content">{{ activeInquiry()!.message }}</p>
-              </div>
-
-              <hr class="divider" />
-
-              <div class="form-group">
-                <label>تحديث حالة الاستفسار</label>
-                <select [(ngModel)]="statusUpdate" class="form-select">
-                  <option value="new">جديدة (لم يُتواصل بعد)</option>
-                  <option value="contacted">تم التواصل والمتابعة</option>
-                  <option value="closed">مغلقة / مكتملة</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>ملاحظات داخلية للمسؤول (Admin Note)</label>
-                <textarea
-                  [(ngModel)]="adminNoteUpdate"
-                  rows="3"
-                  class="form-textarea"
-                  placeholder="سجل ملاحظاتك هنا مثل: تم الاتصال، إرسال عرض سعر، لا يوجد رد..."
-                ></textarea>
-              </div>
-
-              @if (saveStatusError()) {
-                <div class="alert alert-danger">{{ saveStatusError() }}</div>
-              }
+            <div class="message-box">
+              <span class="lbl">نص الرسالة والاستفسار:</span>
+              <p class="msg-content">{{ activeInquiry()!.message }}</p>
             </div>
 
-            <div class="modal-footer">
-              <a [href]="getWhatsAppLink(activeInquiry()!.phone)" target="_blank" class="btn btn-outline wa-action-btn">
-                <span>محادثة واتساب مباشرة</span>
-              </a>
-              <button class="btn btn-outline" (click)="closeDetailModal()">إغلاق</button>
-              <button class="btn btn-primary" [disabled]="isSavingStatus()" (click)="saveInquiryStatus()">
-                @if (isSavingStatus()) {
-                  <div class="spinner-sm"></div>
-                  <span>جاري الحفظ...</span>
-                } @else {
-                  <span>تحديث الحالة والملاحظة</span>
-                }
-              </button>
+            <hr class="divider" />
+
+            <div class="form-group">
+              <label>تحديث حالة الاستفسار</label>
+              <p-select
+                [(ngModel)]="statusUpdate"
+                [options]="statusOptions"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+              />
             </div>
+
+            <div class="form-group">
+              <label>ملاحظات داخلية للمسؤول (Admin Note)</label>
+              <textarea
+                [(ngModel)]="adminNoteUpdate"
+                rows="3"
+                class="form-textarea"
+                placeholder="سجل ملاحظاتك هنا مثل: تم الاتصال، إرسال عرض سعر، لا يوجد رد..."
+              ></textarea>
+            </div>
+
+            @if (saveStatusError()) {
+              <div class="alert alert-danger">{{ saveStatusError() }}</div>
+            }
           </div>
-        </div>
+
+          <ng-template pTemplate="footer">
+            <a [href]="getWhatsAppLink(activeInquiry()!.phone)" target="_blank" class="btn btn-outline wa-action-btn">
+              <span>محادثة واتساب مباشرة</span>
+            </a>
+            <button class="btn btn-outline" (click)="closeDetailModal()">إغلاق</button>
+            <button class="btn btn-primary" [disabled]="isSavingStatus()" (click)="saveInquiryStatus()">
+              @if (isSavingStatus()) {
+                <div class="spinner-sm"></div>
+                <span>جاري الحفظ...</span>
+              } @else {
+                <span>تحديث الحالة والملاحظة</span>
+              }
+            </button>
+          </ng-template>
+        </p-dialog>
       }
     </div>
   `,
@@ -342,20 +347,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 
     .page-info { font-size: 0.85rem; color: var(--admin-text-muted); }
 
-    /* Modal */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem;
-    }
-    .modal-dialog {
-      background: #ffffff; border-radius: var(--radius-lg); width: 100%; max-width: 580px; overflow: hidden; box-shadow: var(--shadow-xl);
-    }
-    .modal-header {
-      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--admin-border); display: flex; align-items: center; justify-content: space-between;
-      h3 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--admin-green-900); }
-    }
-    .close-btn { background: none; border: none; color: var(--admin-text-muted); cursor: pointer; }
-    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; max-height: 75vh; overflow-y: auto; }
+    .dialog-content-body { display: flex; flex-direction: column; gap: 1rem; }
 
     .inquiry-info-grid {
       display: grid;
@@ -405,10 +397,6 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       &:hover { background: #f0fdf4; }
     }
 
-    .modal-footer {
-      padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid var(--admin-border); display: flex; justify-content: flex-end; gap: 0.75rem;
-    }
-
     .empty-state {
       padding: 3rem; text-align: center; color: var(--admin-text-muted); display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
       h3 { margin: 0; font-size: 1.15rem; color: var(--admin-text); }
@@ -416,6 +404,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
     }
 
     .loading-state { padding: 3rem; text-align: center; color: var(--admin-text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    .w-full { width: 100%; }
   `]
 })
 export class InquiriesAdminComponent implements OnInit {
@@ -433,6 +422,12 @@ export class InquiriesAdminComponent implements OnInit {
   readonly activeInquiry = signal<Inquiry | null>(null);
   readonly isSavingStatus = signal(false);
   readonly saveStatusError = signal('');
+
+  readonly statusOptions = [
+    { label: 'جديدة (لم يُتواصل بعد)', value: 'new' },
+    { label: 'تم التواصل والمتابعة', value: 'contacted' },
+    { label: 'مغلقة / مكتملة', value: 'closed' }
+  ];
 
   statusUpdate = 'new';
   adminNoteUpdate = '';

@@ -1,6 +1,7 @@
-import { Component, inject, OnInit, signal, effect } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Component, computed, inject, OnInit, signal, effect } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Select } from 'primeng/select';
 import { I18nService } from '../../core/services/i18n.service';
 import { ApiService } from '../../core/services/api.service';
 import { Category, Product, Supplier, Crop, Pest } from '../../core/models/tapco.models';
@@ -10,7 +11,7 @@ import { IconComponent } from '../../shared/components/icon.component';
 @Component({
   selector: 'app-products-list',
   standalone: true,
-  imports: [RouterLink, FormsModule, ProductCardComponent, IconComponent],
+  imports: [FormsModule, Select, ProductCardComponent, IconComponent],
   template: `
     <div class="products-page">
       <!-- Page Hero Header -->
@@ -102,12 +103,14 @@ import { IconComponent } from '../../shared/components/icon.component';
               @if (crops().length > 0) {
                 <div class="filter-group">
                   <h4 class="filter-heading">{{ i18n.t('catalog.filter_crop') }}</h4>
-                  <select [(ngModel)]="selectedCrop" (change)="applyFilters()" class="filter-select">
-                    <option value="">{{ i18n.t('catalog.all') }}</option>
-                    @for (crop of crops(); track crop.id) {
-                      <option [value]="crop.slug">{{ i18n.getLocalized(crop, 'name') }}</option>
-                    }
-                  </select>
+                  <p-select
+                    [(ngModel)]="selectedCrop"
+                    [options]="cropOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="applyFilters()"
+                    styleClass="w-full filter-p-select"
+                  />
                 </div>
               }
 
@@ -115,12 +118,14 @@ import { IconComponent } from '../../shared/components/icon.component';
               @if (pests().length > 0) {
                 <div class="filter-group">
                   <h4 class="filter-heading">{{ i18n.t('catalog.filter_pest') }}</h4>
-                  <select [(ngModel)]="selectedPest" (change)="applyFilters()" class="filter-select">
-                    <option value="">{{ i18n.t('catalog.all') }}</option>
-                    @for (pest of pests(); track pest.id) {
-                      <option [value]="pest.slug">{{ i18n.getLocalized(pest, 'name') }}</option>
-                    }
-                  </select>
+                  <p-select
+                    [(ngModel)]="selectedPest"
+                    [options]="pestOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="applyFilters()"
+                    styleClass="w-full filter-p-select"
+                  />
                 </div>
               }
 
@@ -128,12 +133,14 @@ import { IconComponent } from '../../shared/components/icon.component';
               @if (suppliers().length > 0) {
                 <div class="filter-group">
                   <h4 class="filter-heading">{{ i18n.t('catalog.filter_supplier') }}</h4>
-                  <select [(ngModel)]="selectedSupplier" (change)="applyFilters()" class="filter-select">
-                    <option value="">{{ i18n.t('catalog.all') }}</option>
-                    @for (sup of suppliers(); track sup.id) {
-                      <option [value]="sup.name">{{ sup.name }}</option>
-                    }
-                  </select>
+                  <p-select
+                    [(ngModel)]="selectedSupplier"
+                    [options]="supplierOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="applyFilters()"
+                    styleClass="w-full filter-p-select"
+                  />
                 </div>
               }
 
@@ -160,11 +167,14 @@ import { IconComponent } from '../../shared/components/icon.component';
 
                 <div class="toolbar-right">
                   <label class="sort-label">{{ i18n.t('catalog.sort') }}:</label>
-                  <select [(ngModel)]="sortBy" (change)="applyFilters()" class="sort-select">
-                    <option value="order">{{ i18n.t('catalog.sort_order') }}</option>
-                    <option value="latest">{{ i18n.t('catalog.sort_latest') }}</option>
-                    <option value="popular">{{ i18n.t('catalog.sort_popular') }}</option>
-                  </select>
+                  <p-select
+                    [(ngModel)]="sortBy"
+                    [options]="sortOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="applyFilters()"
+                    styleClass="sort-p-select"
+                  />
                 </div>
               </div>
 
@@ -574,6 +584,27 @@ export class ProductsListComponent implements OnInit {
   selectedPest = '';
   selectedSupplier = '';
   sortBy = 'order';
+
+  readonly cropOptions = computed(() => [
+    { label: this.i18n.t('catalog.all'), value: '' },
+    ...this.crops().map(c => ({ label: this.i18n.getLocalized(c, 'name'), value: c.slug }))
+  ]);
+
+  readonly pestOptions = computed(() => [
+    { label: this.i18n.t('catalog.all'), value: '' },
+    ...this.pests().map(p => ({ label: this.i18n.getLocalized(p, 'name'), value: p.slug }))
+  ]);
+
+  readonly supplierOptions = computed(() => [
+    { label: this.i18n.t('catalog.all'), value: '' },
+    ...this.suppliers().map(s => ({ label: s.name, value: s.name }))
+  ]);
+
+  readonly sortOptions = computed(() => [
+    { label: this.i18n.t('catalog.sort_order'), value: 'order' },
+    { label: this.i18n.t('catalog.sort_latest'), value: 'latest' },
+    { label: this.i18n.t('catalog.sort_popular'), value: 'popular' }
+  ]);
 
   ngOnInit(): void {
     // Load filter options

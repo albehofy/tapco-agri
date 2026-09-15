@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Dialog } from 'primeng/dialog';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Certificate } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -7,7 +8,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-certificates-admin',
   standalone: true,
-  imports: [FormsModule, AdminIconComponent],
+  imports: [FormsModule, Dialog, AdminIconComponent],
   template: `
     <div class="certs-page">
       <div class="page-header">
@@ -59,62 +60,60 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- Modal -->
-      @if (showModal()) {
-        <div class="modal-backdrop" (click)="closeModal()">
-          <div class="modal-dialog" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-              <h3>{{ modalMode() === 'create' ? 'إضافة شهادة جودة جديدة' : 'تعديل بيانات الشهادة' }}</h3>
-              <button class="close-btn" (click)="closeModal()">
-                <app-admin-icon name="x" [size]="20" />
-              </button>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group">
-                <label>اسم الشهادة بالعربية <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="formData.title_ar" class="form-input" placeholder="مثال: شهادة ISO 9001 لنظم إدارة الجودة" />
-              </div>
-
-              <div class="form-group">
-                <label>اسم الشهادة بالإنجليزية <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="formData.title_en" class="form-input" placeholder="e.g. ISO 9001 Quality Management System" />
-              </div>
-
-              <div class="form-group">
-                <label>ترتيب الظهور</label>
-                <input type="number" [(ngModel)]="formData.order" class="form-input" />
-              </div>
-
-              <div class="form-group">
-                <label>صورة الشهادة <span class="req">*</span></label>
-                <input type="file" (change)="onImageSelected($event)" accept="image/*" class="form-file" />
-                @if (imagePreview()) {
-                  <div class="preview-box">
-                    <img [src]="imagePreview()" alt="معاينة" />
-                  </div>
-                }
-              </div>
-
-              @if (errorMessage()) {
-                <div class="alert alert-danger">{{ errorMessage() }}</div>
-              }
-            </div>
-
-            <div class="modal-footer">
-              <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
-              <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveCertificate()">
-                @if (isSubmitting()) {
-                  <div class="spinner-sm"></div>
-                  <span>جاري الحفظ...</span>
-                } @else {
-                  <span>حفظ الشهادة</span>
-                }
-              </button>
-            </div>
+      <!-- PrimeNG Dialog -->
+      <p-dialog
+        [visible]="showModal()"
+        (visibleChange)="showModal.set($event)"
+        [modal]="true"
+        [header]="modalMode() === 'create' ? 'إضافة شهادة جودة جديدة' : 'تعديل بيانات الشهادة'"
+        [style]="{ width: '90vw', maxWidth: '480px' }"
+        [draggable]="false"
+        [resizable]="false"
+        [dismissableMask]="true"
+      >
+        <div class="dialog-content-body pt-2">
+          <div class="form-group">
+            <label>اسم الشهادة بالعربية <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.title_ar" class="form-input" placeholder="مثال: شهادة ISO 9001 لنظم إدارة الجودة" />
           </div>
+
+          <div class="form-group">
+            <label>اسم الشهادة بالإنجليزية <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.title_en" class="form-input" placeholder="e.g. ISO 9001 Quality Management System" />
+          </div>
+
+          <div class="form-group">
+            <label>ترتيب الظهور</label>
+            <input type="number" [(ngModel)]="formData.order" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label>صورة الشهادة <span class="req">*</span></label>
+            <input type="file" (change)="onImageSelected($event)" accept="image/*" class="form-file" />
+            @if (imagePreview()) {
+              <div class="preview-box">
+                <img [src]="imagePreview()" alt="معاينة" />
+              </div>
+            }
+          </div>
+
+          @if (errorMessage()) {
+            <div class="alert alert-danger mt-3">{{ errorMessage() }}</div>
+          }
         </div>
-      }
+
+        <ng-template pTemplate="footer">
+          <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
+          <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveCertificate()">
+            @if (isSubmitting()) {
+              <div class="spinner-sm"></div>
+              <span>جاري الحفظ...</span>
+            } @else {
+              <span>حفظ الشهادة</span>
+            }
+          </button>
+        </ng-template>
+      </p-dialog>
     </div>
   `,
   styles: [`
@@ -160,20 +159,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
     .card-actions { display: flex; gap: 0.5rem; width: 100%; justify-content: center; border-top: 1px solid var(--admin-border); padding-top: 0.85rem; margin-top: auto; }
     .btn-danger-soft { color: #ef4444; border-color: #fee2e2; &:hover { background: #fef2f2; border-color: #fca5a5; } }
 
-    /* Modal */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem;
-    }
-    .modal-dialog {
-      background: #ffffff; border-radius: var(--radius-lg); width: 100%; max-width: 480px; overflow: hidden; box-shadow: var(--shadow-xl);
-    }
-    .modal-header {
-      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--admin-border); display: flex; align-items: center; justify-content: space-between;
-      h3 { margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--admin-green-900); }
-    }
-    .close-btn { background: none; border: none; color: var(--admin-text-muted); cursor: pointer; }
-    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .dialog-content-body { display: flex; flex-direction: column; gap: 1rem; }
+
     .form-group {
       display: flex; flex-direction: column; gap: 0.35rem;
       label { font-size: 0.85rem; font-weight: 600; color: var(--admin-text); }
@@ -182,9 +169,6 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
     .preview-box {
       margin-top: 0.5rem; width: 100%; height: 120px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--admin-border);
       img { width: 100%; height: 100%; object-fit: contain; }
-    }
-    .modal-footer {
-      padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid var(--admin-border); display: flex; justify-content: flex-end; gap: 0.75rem;
     }
     .loading-state { padding: 3rem; text-align: center; color: var(--admin-text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem; }
   `]

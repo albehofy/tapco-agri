@@ -1,5 +1,7 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Dialog } from 'primeng/dialog';
+import { Select } from 'primeng/select';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Category } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -7,7 +9,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-categories-admin',
   standalone: true,
-  imports: [FormsModule, AdminIconComponent],
+  imports: [FormsModule, Dialog, Select, AdminIconComponent],
   template: `
     <div class="categories-page">
       <div class="page-header">
@@ -98,80 +100,76 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- Modal -->
-      @if (showModal()) {
-        <div class="modal-backdrop" (click)="closeModal()">
-          <div class="modal-dialog" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-              <h3>{{ modalMode() === 'create' ? 'إضافة فئة جديدة' : 'تعديل بيانات الفئة' }}</h3>
-              <button class="close-btn" (click)="closeModal()">
-                <app-admin-icon name="x" [size]="20" />
-              </button>
-            </div>
+      <!-- PrimeNG Dialog -->
+      <p-dialog
+        [visible]="showModal()"
+        (visibleChange)="showModal.set($event)"
+        [modal]="true"
+        [header]="modalMode() === 'create' ? 'إضافة فئة جديدة' : 'تعديل بيانات الفئة'"
+        [style]="{ width: '90vw', maxWidth: '560px' }"
+        [draggable]="false"
+        [resizable]="false"
+        [dismissableMask]="true"
+      >
+        <div class="form-grid pt-2">
+          <div class="form-group">
+            <label>الاسم بالعربية <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.name_ar" class="form-input" placeholder="مثال: مبيدات حشرية" />
+          </div>
+          <div class="form-group">
+            <label>الاسم بالإنجليزية <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.name_en" class="form-input" placeholder="e.g. Insecticides" />
+          </div>
 
-            <div class="modal-body">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>الاسم بالعربية <span class="req">*</span></label>
-                  <input type="text" [(ngModel)]="formData.name_ar" class="form-input" placeholder="مثال: مبيدات حشرية" />
-                </div>
-                <div class="form-group">
-                  <label>الاسم بالإنجليزية <span class="req">*</span></label>
-                  <input type="text" [(ngModel)]="formData.name_en" class="form-input" placeholder="e.g. Insecticides" />
-                </div>
+          <div class="form-group full-width">
+            <label>الفئة الرئيسية (الأصلية)</label>
+            <p-select
+              [(ngModel)]="formData.parent_id"
+              [options]="parentCategoryOptions()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="بدون فئة أصلية (فئة رئيسية جذرية)"
+              styleClass="w-full"
+            />
+          </div>
 
-                <div class="form-group full-width">
-                  <label>الفئة الرئيسية (الأصلية)</label>
-                  <select [(ngModel)]="formData.parent_id" class="form-select">
-                    <option [ngValue]="null">بدون فئة أصلية (فئة رئيسية جذرية)</option>
-                    @for (root of rootCategories(); track root.id) {
-                      @if (root.id !== editingId()) {
-                        <option [ngValue]="root.id">{{ root.name_ar }} ({{ root.name_en }})</option>
-                      }
-                    }
-                  </select>
-                </div>
+          <div class="form-group">
+            <label>أيقونة الرمز (SVG Key)</label>
+            <input type="text" [(ngModel)]="formData.icon" class="form-input" placeholder="layers, bug, sprout..." />
+          </div>
 
-                <div class="form-group">
-                  <label>أيقونة الرمز (SVG Key)</label>
-                  <input type="text" [(ngModel)]="formData.icon" class="form-input" placeholder="layers, bug, sprout..." />
-                </div>
+          <div class="form-group">
+            <label>ترتيب الظهور</label>
+            <input type="number" [(ngModel)]="formData.order" class="form-input" />
+          </div>
 
-                <div class="form-group">
-                  <label>ترتيب الظهور</label>
-                  <input type="number" [(ngModel)]="formData.order" class="form-input" />
-                </div>
-
-                <div class="form-group full-width">
-                  <label>صورة الفئة</label>
-                  <input type="file" (change)="onImageSelected($event)" accept="image/*" class="form-file" />
-                  @if (imagePreview()) {
-                    <div class="preview-box">
-                      <img [src]="imagePreview()" alt="معاينة" />
-                    </div>
-                  }
-                </div>
+          <div class="form-group full-width">
+            <label>صورة الفئة</label>
+            <input type="file" (change)="onImageSelected($event)" accept="image/*" class="form-file" />
+            @if (imagePreview()) {
+              <div class="preview-box">
+                <img [src]="imagePreview()" alt="معاينة" />
               </div>
-
-              @if (errorMessage()) {
-                <div class="alert alert-danger">{{ errorMessage() }}</div>
-              }
-            </div>
-
-            <div class="modal-footer">
-              <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
-              <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveCategory()">
-                @if (isSubmitting()) {
-                  <div class="spinner-sm"></div>
-                  <span>جاري الحفظ...</span>
-                } @else {
-                  <span>حفظ البيانات</span>
-                }
-              </button>
-            </div>
+            }
           </div>
         </div>
-      }
+
+        @if (errorMessage()) {
+          <div class="alert alert-danger mt-3">{{ errorMessage() }}</div>
+        }
+
+        <ng-template pTemplate="footer">
+          <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
+          <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveCategory()">
+            @if (isSubmitting()) {
+              <div class="spinner-sm"></div>
+              <span>جاري الحفظ...</span>
+            } @else {
+              <span>حفظ البيانات</span>
+            }
+          </button>
+        </ng-template>
+      </p-dialog>
     </div>
   `,
   styles: [`
@@ -373,59 +371,6 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       padding-top: 0.5rem;
     }
 
-    /* Modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-    }
-
-    .modal-dialog {
-      background: #ffffff;
-      border-radius: var(--radius-lg);
-      width: 100%;
-      max-width: 550px;
-      overflow: hidden;
-      box-shadow: var(--shadow-xl);
-    }
-
-    .modal-header {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--admin-border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      h3 {
-        margin: 0;
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--admin-green-900);
-      }
-    }
-
-    .close-btn {
-      background: none;
-      border: none;
-      color: var(--admin-text-muted);
-      cursor: pointer;
-      &:hover { color: var(--admin-text); }
-    }
-
-    .modal-body {
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      max-height: 75vh;
-      overflow-y: auto;
-    }
-
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -467,15 +412,6 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       }
     }
 
-    .modal-footer {
-      padding: 1rem 1.5rem;
-      background: #f8fafc;
-      border-top: 1px solid var(--admin-border);
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.75rem;
-    }
-
     .loading-state {
       padding: 3rem;
       text-align: center;
@@ -484,6 +420,10 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       flex-direction: column;
       align-items: center;
       gap: 1rem;
+    }
+
+    .w-full {
+      width: 100%;
     }
   `]
 })
@@ -499,6 +439,18 @@ export class CategoriesAdminComponent implements OnInit {
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal('');
   readonly imagePreview = signal<string | null>(null);
+
+  readonly parentCategoryOptions = computed(() => {
+    const list: { label: string; value: number | null }[] = [
+      { label: 'بدون فئة أصلية (فئة رئيسية جذرية)', value: null }
+    ];
+    for (const root of this.rootCategories()) {
+      if (root.id !== this.editingId()) {
+        list.push({ label: `${root.name_ar} (${root.name_en})`, value: root.id });
+      }
+    }
+    return list;
+  });
 
   selectedFile: File | null = null;
 

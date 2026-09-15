@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Dialog } from 'primeng/dialog';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Branch } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -7,7 +8,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-branches-admin',
   standalone: true,
-  imports: [FormsModule, AdminIconComponent],
+  imports: [FormsModule, Dialog, AdminIconComponent],
   template: `
     <div class="branches-page">
       <div class="page-header">
@@ -84,89 +85,85 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- Modal -->
-      @if (showModal()) {
-        <div class="modal-backdrop" (click)="closeModal()">
-          <div class="modal-dialog" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-              <h3>{{ modalMode() === 'create' ? 'إضافة فرع جديد' : 'تعديل بيانات الفرع' }}</h3>
-              <button class="close-btn" (click)="closeModal()">
-                <app-admin-icon name="x" [size]="20" />
-              </button>
-            </div>
+      <!-- PrimeNG Dialog -->
+      <p-dialog
+        [visible]="showModal()"
+        (visibleChange)="showModal.set($event)"
+        [modal]="true"
+        [header]="modalMode() === 'create' ? 'إضافة فرع جديد' : 'تعديل بيانات الفرع'"
+        [style]="{ width: '90vw', maxWidth: '600px' }"
+        [draggable]="false"
+        [resizable]="false"
+        [dismissableMask]="true"
+      >
+        <div class="form-grid pt-2">
+          <div class="form-group">
+            <label>اسم الفرع بالعربية <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.name_ar" class="form-input" placeholder="الفرع الرئيسي - الرياض" />
+          </div>
+          <div class="form-group">
+            <label>اسم الفرع بالإنجليزية <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.name_en" class="form-input" placeholder="Main Branch - Riyadh" />
+          </div>
 
-            <div class="modal-body">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>اسم الفرع بالعربية <span class="req">*</span></label>
-                  <input type="text" [(ngModel)]="formData.name_ar" class="form-input" placeholder="الفرع الرئيسي - الرياض" />
-                </div>
-                <div class="form-group">
-                  <label>اسم الفرع بالإنجليزية <span class="req">*</span></label>
-                  <input type="text" [(ngModel)]="formData.name_en" class="form-input" placeholder="Main Branch - Riyadh" />
-                </div>
+          <div class="form-group full-width">
+            <label>العنوان بالعربية <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.address_ar" class="form-input" />
+          </div>
+          <div class="form-group full-width">
+            <label>العنوان بالإنجليزية <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.address_en" class="form-input" />
+          </div>
 
-                <div class="form-group full-width">
-                  <label>العنوان بالعربية <span class="req">*</span></label>
-                  <input type="text" [(ngModel)]="formData.address_ar" class="form-input" />
-                </div>
-                <div class="form-group full-width">
-                  <label>العنوان بالإنجليزية <span class="req">*</span></label>
-                  <input type="text" [(ngModel)]="formData.address_en" class="form-input" />
-                </div>
+          <div class="form-group">
+            <label>رقم الهاتف <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="formData.phone" class="form-input" dir="ltr" placeholder="+966..." />
+          </div>
+          <div class="form-group">
+            <label>رقم الواتساب</label>
+            <input type="text" [(ngModel)]="formData.whatsapp" class="form-input" dir="ltr" placeholder="+966..." />
+          </div>
 
-                <div class="form-group">
-                  <label>رقم الهاتف <span class="req">*</span></label>
-                  <input type="text" [(ngModel)]="formData.phone" class="form-input" dir="ltr" placeholder="+966..." />
-                </div>
-                <div class="form-group">
-                  <label>رقم الواتساب</label>
-                  <input type="text" [(ngModel)]="formData.whatsapp" class="form-input" dir="ltr" placeholder="+966..." />
-                </div>
+          <div class="form-group">
+            <label>ساعات العمل بالعربية</label>
+            <input type="text" [(ngModel)]="formData.working_hours_ar" class="form-input" placeholder="السبت - الخميس 8 ص - 5 م" />
+          </div>
+          <div class="form-group">
+            <label>ساعات العمل بالإنجليزية</label>
+            <input type="text" [(ngModel)]="formData.working_hours_en" class="form-input" placeholder="Sat - Thu 8 AM - 5 PM" />
+          </div>
 
-                <div class="form-group">
-                  <label>ساعات العمل بالعربية</label>
-                  <input type="text" [(ngModel)]="formData.working_hours_ar" class="form-input" placeholder="السبت - الخميس 8 ص - 5 م" />
-                </div>
-                <div class="form-group">
-                  <label>ساعات العمل بالإنجليزية</label>
-                  <input type="text" [(ngModel)]="formData.working_hours_en" class="form-input" placeholder="Sat - Thu 8 AM - 5 PM" />
-                </div>
+          <div class="form-group">
+            <label>خط العرض (Latitude)</label>
+            <input type="number" step="0.0001" [(ngModel)]="formData.lat" class="form-input" placeholder="24.7136" />
+          </div>
+          <div class="form-group">
+            <label>خط الطول (Longitude)</label>
+            <input type="number" step="0.0001" [(ngModel)]="formData.lng" class="form-input" placeholder="46.6753" />
+          </div>
 
-                <div class="form-group">
-                  <label>خط العرض (Latitude)</label>
-                  <input type="number" step="0.0001" [(ngModel)]="formData.lat" class="form-input" placeholder="24.7136" />
-                </div>
-                <div class="form-group">
-                  <label>خط الطول (Longitude)</label>
-                  <input type="number" step="0.0001" [(ngModel)]="formData.lng" class="form-input" placeholder="46.6753" />
-                </div>
-
-                <div class="form-group">
-                  <label>ترتيب الظهور</label>
-                  <input type="number" [(ngModel)]="formData.order" class="form-input" />
-                </div>
-              </div>
-
-              @if (errorMessage()) {
-                <div class="alert alert-danger">{{ errorMessage() }}</div>
-              }
-            </div>
-
-            <div class="modal-footer">
-              <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
-              <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveBranch()">
-                @if (isSubmitting()) {
-                  <div class="spinner-sm"></div>
-                  <span>جاري الحفظ...</span>
-                } @else {
-                  <span>حفظ الفرع</span>
-                }
-              </button>
-            </div>
+          <div class="form-group full-width">
+            <label>ترتيب الظهور</label>
+            <input type="number" [(ngModel)]="formData.order" class="form-input" />
           </div>
         </div>
-      }
+
+        @if (errorMessage()) {
+          <div class="alert alert-danger mt-3">{{ errorMessage() }}</div>
+        }
+
+        <ng-template pTemplate="footer">
+          <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
+          <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveBranch()">
+            @if (isSubmitting()) {
+              <div class="spinner-sm"></div>
+              <span>جاري الحفظ...</span>
+            } @else {
+              <span>حفظ الفرع</span>
+            }
+          </button>
+        </ng-template>
+      </p-dialog>
     </div>
   `,
   styles: [`
@@ -237,21 +234,6 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 
     .btn-danger-soft { color: #ef4444; border-color: #fee2e2; &:hover { background: #fef2f2; border-color: #fca5a5; } }
 
-    /* Modal */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem;
-    }
-    .modal-dialog {
-      background: #ffffff; border-radius: var(--radius-lg); width: 100%; max-width: 580px; overflow: hidden; box-shadow: var(--shadow-xl);
-    }
-    .modal-header {
-      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--admin-border); display: flex; align-items: center; justify-content: space-between;
-      h3 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--admin-green-900); }
-    }
-    .close-btn { background: none; border: none; color: var(--admin-text-muted); cursor: pointer; }
-    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; max-height: 75vh; overflow-y: auto; }
-
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .full-width { grid-column: 1 / -1; }
     .form-group {
@@ -260,9 +242,6 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       .req { color: #ef4444; }
     }
 
-    .modal-footer {
-      padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid var(--admin-border); display: flex; justify-content: flex-end; gap: 0.75rem;
-    }
     .loading-state { padding: 3rem; text-align: center; color: var(--admin-text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem; }
   `]
 })
