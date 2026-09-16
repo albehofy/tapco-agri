@@ -88,13 +88,19 @@ import { IconComponent } from '../icon.component';
             <span class="iso-badge">ISO 9001:2015</span>
             <span class="iso-badge">ISO 14001</span>
           </div>
+          <button class="back-to-top-btn" (click)="scrollTop()" aria-label="العودة للأعلى">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
         </div>
       </div>
     </footer>
   `,
   styles: [`
     .tapco-footer {
-      background: linear-gradient(180deg, var(--tapco-green-900) 0%, #061914 100%);
+      background: 
+        radial-gradient(ellipse at 20% 50%, rgba(34, 118, 96, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(196, 138, 68, 0.08) 0%, transparent 60%),
+        linear-gradient(175deg, #0d3327 0%, #061914 100%);
       color: #e5ede9;
       padding-top: 4.5rem;
       padding-bottom: 2rem;
@@ -142,7 +148,7 @@ import { IconComponent } from '../icon.component';
 
       &:hover {
         background: var(--tapco-bronze-500);
-        transform: translateY(-2px);
+        
       }
     }
 
@@ -184,13 +190,13 @@ import { IconComponent } from '../icon.component';
 
         &:hover {
           color: var(--tapco-bronze-400);
-          transform: translateX(4px);
+          
         }
       }
     }
 
     html[dir="rtl"] .col-links li a:hover {
-      transform: translateX(-4px);
+      
     }
 
     .footer-contacts {
@@ -225,9 +231,13 @@ import { IconComponent } from '../icon.component';
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      padding-top: 2rem;
       font-size: 0.825rem;
       color: #8fa099;
+      border-top: 1px solid transparent;
+      background-image: linear-gradient(#061914, #061914), linear-gradient(90deg, var(--tapco-green-700), var(--tapco-bronze-500), var(--tapco-green-700));
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
+      padding-top: 2rem;
     }
 
     .bottom-badges {
@@ -236,6 +246,26 @@ import { IconComponent } from '../icon.component';
       gap: 0.65rem;
     }
 
+    .back-to-top-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #c9d8d1;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .back-to-top-btn:hover {
+      background: var(--tapco-bronze-500);
+      border-color: var(--tapco-bronze-500);
+      color: #fff;
+      
+    }
     .iso-badge {
       display: inline-block;
       padding: 0.2rem 0.55rem;
@@ -268,4 +298,5 @@ import { IconComponent } from '../icon.component';
 })
 export class FooterComponent {
   readonly i18n = inject(I18nService);
+  scrollTop(): void { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 }

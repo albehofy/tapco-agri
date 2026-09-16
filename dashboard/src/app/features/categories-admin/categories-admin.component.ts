@@ -1,7 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
-import { Select } from 'primeng/select';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Category } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -9,7 +8,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-categories-admin',
   standalone: true,
-  imports: [FormsModule, Dialog, Select, AdminIconComponent],
+  imports: [FormsModule, ModalComponent, AdminIconComponent],
   template: `
     <div class="categories-page">
       <div class="page-header">
@@ -101,15 +100,15 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       }
 
       <!-- PrimeNG Dialog -->
-      <p-dialog
+      <app-modal
         [visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        [modal]="true"
+        
         [header]="modalMode() === 'create' ? 'إضافة فئة جديدة' : 'تعديل بيانات الفئة'"
         [style]="{ width: '90vw', maxWidth: '560px' }"
-        [draggable]="false"
-        [resizable]="false"
-        [dismissableMask]="true"
+        
+        
+        [dismissable]="true"
       >
         <div class="form-grid pt-2">
           <div class="form-group">
@@ -123,14 +122,14 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 
           <div class="form-group full-width">
             <label>الفئة الرئيسية (الأصلية)</label>
-            <p-select
-              [(ngModel)]="formData.parent_id"
-              [options]="parentCategoryOptions()"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="بدون فئة أصلية (فئة رئيسية جذرية)"
-              styleClass="w-full"
-            />
+            <div class="custom-select-wrap">
+              <select class="form-select" [(ngModel)]="formData.parent_id">
+                <option [ngValue]="null">-- بدون فئة أصلية (فئة رئيسية جذرية) --</option>
+                @for (opt of parentCategoryOptions(); track opt.value) {
+                  <option [ngValue]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
           </div>
 
           <div class="form-group">
@@ -158,7 +157,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
           <div class="alert alert-danger mt-3">{{ errorMessage() }}</div>
         }
 
-        <ng-template pTemplate="footer">
+        <div modal-footer>
           <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
           <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveCategory()">
             @if (isSubmitting()) {
@@ -168,8 +167,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
               <span>حفظ البيانات</span>
             }
           </button>
-        </ng-template>
-      </p-dialog>
+        </div>
+      </app-modal>
     </div>
   `,
   styles: [`

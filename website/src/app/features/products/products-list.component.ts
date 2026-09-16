@@ -1,7 +1,6 @@
 import { Component, computed, inject, OnInit, signal, effect } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Select } from 'primeng/select';
 import { I18nService } from '../../core/services/i18n.service';
 import { ApiService } from '../../core/services/api.service';
 import { Category, Product, Supplier, Crop, Pest } from '../../core/models/tapco.models';
@@ -11,7 +10,7 @@ import { IconComponent } from '../../shared/components/icon.component';
 @Component({
   selector: 'app-products-list',
   standalone: true,
-  imports: [FormsModule, Select, ProductCardComponent, IconComponent],
+  imports: [FormsModule, ProductCardComponent, IconComponent],
   template: `
     <div class="products-page">
       <!-- Page Hero Header -->
@@ -103,14 +102,13 @@ import { IconComponent } from '../../shared/components/icon.component';
               @if (crops().length > 0) {
                 <div class="filter-group">
                   <h4 class="filter-heading">{{ i18n.t('catalog.filter_crop') }}</h4>
-                  <p-select
-                    [(ngModel)]="selectedCrop"
-                    [options]="cropOptions()"
-                    optionLabel="label"
-                    optionValue="value"
-                    (onChange)="applyFilters()"
-                    styleClass="w-full filter-p-select"
-                  />
+                  <div class="custom-select-wrap">
+                    <select class="form-select w-full" [(ngModel)]="selectedCrop" (change)="applyFilters()">
+                      @for (opt of cropOptions(); track opt.value) {
+                        <option [ngValue]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                  </div>
                 </div>
               }
 
@@ -118,14 +116,13 @@ import { IconComponent } from '../../shared/components/icon.component';
               @if (pests().length > 0) {
                 <div class="filter-group">
                   <h4 class="filter-heading">{{ i18n.t('catalog.filter_pest') }}</h4>
-                  <p-select
-                    [(ngModel)]="selectedPest"
-                    [options]="pestOptions()"
-                    optionLabel="label"
-                    optionValue="value"
-                    (onChange)="applyFilters()"
-                    styleClass="w-full filter-p-select"
-                  />
+                  <div class="custom-select-wrap">
+                    <select class="form-select w-full" [(ngModel)]="selectedPest" (change)="applyFilters()">
+                      @for (opt of pestOptions(); track opt.value) {
+                        <option [ngValue]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                  </div>
                 </div>
               }
 
@@ -133,14 +130,13 @@ import { IconComponent } from '../../shared/components/icon.component';
               @if (suppliers().length > 0) {
                 <div class="filter-group">
                   <h4 class="filter-heading">{{ i18n.t('catalog.filter_supplier') }}</h4>
-                  <p-select
-                    [(ngModel)]="selectedSupplier"
-                    [options]="supplierOptions()"
-                    optionLabel="label"
-                    optionValue="value"
-                    (onChange)="applyFilters()"
-                    styleClass="w-full filter-p-select"
-                  />
+                  <div class="custom-select-wrap">
+                    <select class="form-select w-full" [(ngModel)]="selectedSupplier" (change)="applyFilters()">
+                      @for (opt of supplierOptions(); track opt.value) {
+                        <option [ngValue]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                  </div>
                 </div>
               }
 
@@ -167,14 +163,13 @@ import { IconComponent } from '../../shared/components/icon.component';
 
                 <div class="toolbar-right">
                   <label class="sort-label">{{ i18n.t('catalog.sort') }}:</label>
-                  <p-select
-                    [(ngModel)]="sortBy"
-                    [options]="sortOptions()"
-                    optionLabel="label"
-                    optionValue="value"
-                    (onChange)="applyFilters()"
-                    styleClass="sort-p-select"
-                  />
+                  <div class="custom-select-wrap sort-select-wrap">
+                    <select class="form-select sort-select" [(ngModel)]="sortBy" (change)="applyFilters()">
+                      @for (opt of sortOptions(); track opt.value) {
+                        <option [ngValue]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -231,11 +226,21 @@ import { IconComponent } from '../../shared/components/icon.component';
     </div>
   `,
   styles: [`
+    .custom-select-wrap { position: relative; }
+    .form-select { width: 100%; padding: 0.55rem 2.25rem 0.55rem 0.75rem; border: 1px solid var(--tapco-border); border-radius: var(--radius-sm); background: #fff; font-size: 0.9rem; color: var(--tapco-text-main); appearance: none; -webkit-appearance: none; cursor: pointer; line-height: 1.4; }
+    .form-select:focus { outline: none; border-color: var(--tapco-green-600); box-shadow: 0 0 0 3px rgba(18,67,54,0.12); }
+    .custom-select-wrap::after { content: ''; position: absolute; inset-inline-end: 0.75rem; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid #53645e; pointer-events: none; }
+    .sort-select-wrap { display: inline-block; width: auto; }
+
     .page-hero {
       background: linear-gradient(135deg, var(--tapco-green-900) 0%, var(--tapco-green-800) 100%);
       color: #ffffff;
-      padding: 4.5rem 0 3.5rem;
+      padding: 3.5rem 2.5rem;
+      border-radius: 16px;
+      margin-top: 2rem;
+      margin-bottom: 3rem;
       border-bottom: 3px solid var(--tapco-bronze-500);
+      box-shadow: 0 4px 20px rgba(10, 38, 30, 0.08);
     }
 
     .page-title {
@@ -608,10 +613,10 @@ export class ProductsListComponent implements OnInit {
 
   ngOnInit(): void {
     // Load filter options
-    this.api.getCategories().subscribe(res => res?.data && this.categories.set(res.data));
-    this.api.getCrops().subscribe(res => res?.data && this.crops.set(res.data));
-    this.api.getPests().subscribe(res => res?.data && this.pests.set(res.data));
-    this.api.getSuppliers().subscribe(res => res?.data && this.suppliers.set(res.data));
+    this.api.getCategories().subscribe(res => res?.data && this.categories.set(Array.isArray(res.data) ? res.data : []));
+    this.api.getCrops().subscribe(res => res?.data && this.crops.set(Array.isArray(res.data) ? res.data : []));
+    this.api.getPests().subscribe(res => res?.data && this.pests.set(Array.isArray(res.data) ? res.data : []));
+    this.api.getSuppliers().subscribe(res => res?.data && this.suppliers.set(Array.isArray(res.data) ? res.data : []));
 
     // Listen to query parameters
     this.route.queryParams.subscribe(params => {

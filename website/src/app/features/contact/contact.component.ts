@@ -153,8 +153,12 @@ import { IconComponent } from '../../shared/components/icon.component';
     .page-hero {
       background: linear-gradient(135deg, var(--tapco-green-900) 0%, var(--tapco-green-800) 100%);
       color: #ffffff;
-      padding: 4.5rem 0 3.5rem;
+      padding: 3.5rem 2.5rem;
+      border-radius: 16px;
+      margin-top: 2rem;
+      margin-bottom: 3rem;
       border-bottom: 3px solid var(--tapco-bronze-500);
+      box-shadow: 0 4px 20px rgba(10, 38, 30, 0.08);
     }
 
     .page-title {

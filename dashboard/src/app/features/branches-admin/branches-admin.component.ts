@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Branch } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -8,7 +8,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-branches-admin',
   standalone: true,
-  imports: [FormsModule, Dialog, AdminIconComponent],
+  imports: [FormsModule, ModalComponent, AdminIconComponent],
   template: `
     <div class="branches-page">
       <div class="page-header">
@@ -85,16 +85,16 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- PrimeNG Dialog -->
-      <p-dialog
+      <!-- PrimeNG ModalComponent -->
+      <app-modal
         [visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        [modal]="true"
+        
         [header]="modalMode() === 'create' ? 'إضافة فرع جديد' : 'تعديل بيانات الفرع'"
         [style]="{ width: '90vw', maxWidth: '600px' }"
-        [draggable]="false"
-        [resizable]="false"
-        [dismissableMask]="true"
+        
+        
+        [dismissable]="true"
       >
         <div class="form-grid pt-2">
           <div class="form-group">
@@ -152,7 +152,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
           <div class="alert alert-danger mt-3">{{ errorMessage() }}</div>
         }
 
-        <ng-template pTemplate="footer">
+        <div modal-footer>
           <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
           <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveBranch()">
             @if (isSubmitting()) {
@@ -162,8 +162,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
               <span>حفظ الفرع</span>
             }
           </button>
-        </ng-template>
-      </p-dialog>
+        </div>
+      </app-modal>
     </div>
   `,
   styles: [`

@@ -52,8 +52,8 @@ import { IconComponent } from '../../shared/components/icon.component';
             <div class="story-visual">
               <div class="factory-info-card card-base">
                 <div class="factory-img-box">
-                  <app-icon name="layers" [size]="64" class="factory-icon" />
-                  <span class="factory-title">TAPCO Industrial Complex</span>
+                  <img src="/images/factory-lab.jpg" alt="TAPCO Industrial Complex" class="factory-img" />
+                  <span class="factory-title">مجمع مصانع ومعامل TAPCO - مدينة السادات</span>
                 </div>
                 <div class="factory-details">
                   <div class="fd-row">
@@ -143,8 +143,12 @@ import { IconComponent } from '../../shared/components/icon.component';
     .page-hero {
       background: linear-gradient(135deg, var(--tapco-green-900) 0%, var(--tapco-green-800) 100%);
       color: #ffffff;
-      padding: 4.5rem 0 3.5rem;
+      padding: 3.5rem 2.5rem;
+      border-radius: 16px;
+      margin-top: 2rem;
+      margin-bottom: 3rem;
       border-bottom: 3px solid var(--tapco-bronze-500);
+      box-shadow: 0 4px 20px rgba(10, 38, 30, 0.08);
     }
 
     .page-title {
@@ -225,6 +229,12 @@ import { IconComponent } from '../../shared/components/icon.component';
       border-top: 4px solid var(--tapco-bronze-500);
     }
 
+    .factory-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
     .factory-img-box {
       background: linear-gradient(135deg, var(--tapco-green-900) 0%, #0d382c 100%);
       color: #ffffff;

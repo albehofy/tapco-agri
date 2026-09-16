@@ -48,7 +48,7 @@ import { IconComponent } from '../icon.component';
       <div class="main-navbar">
         <div class="tapco-container nav-container">
           <!-- Brand Logo -->
-          <app-logo [height]="42" />
+          <app-logo [height]="48" />
 
           <!-- Desktop Navigation Menu -->
           <nav class="desktop-nav">
@@ -60,7 +60,7 @@ import { IconComponent } from '../icon.component';
             </a>
 
             <!-- Products dropdown -->
-            <div class="nav-dropdown" (mouseenter)="isDropdownOpen.set(true)" (mouseleave)="isDropdownOpen.set(false)">
+            <div class="nav-dropdown" (mouseenter)="onDropdownEnter()" (mouseleave)="onDropdownLeave()">
               <a routerLink="/products" routerLinkActive="active" class="nav-link dropdown-trigger">
                 <span>{{ i18n.t('nav.products') }}</span>
                 <app-icon name="chevron-down" [size]="14" class="dropdown-chevron" />
@@ -123,7 +123,7 @@ import { IconComponent } from '../icon.component';
         <div class="mobile-drawer-overlay" (click)="closeMobileMenu()">
           <div class="mobile-drawer" (click)="$event.stopPropagation()">
             <div class="drawer-header">
-              <app-logo [height]="36" />
+              <app-logo [height]="40" />
               <button class="close-drawer-btn" (click)="closeMobileMenu()">
                 <app-icon name="x" [size]="22" />
               </button>
@@ -185,14 +185,19 @@ import { IconComponent } from '../icon.component';
   `,
   styles: [`
     .tapco-header {
+      margin-bottom: 1.5rem;
       position: sticky;
       top: 0;
       z-index: 1000;
       background: var(--tapco-bg-surface);
       box-shadow: var(--shadow-sm);
-      transition: all 0.3s ease;
+      backdrop-filter: blur(0px);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       &.is-scrolled {
-        box-shadow: 0 4px 20px rgba(10, 38, 30, 0.12);
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: 0 4px 24px rgba(10, 38, 30, 0.1), 0 1px 0 rgba(196, 138, 68, 0.2);
       }
     }
 
@@ -274,20 +279,52 @@ import { IconComponent } from '../icon.component';
         color: var(--tapco-green-700);
       }
 
-      &.active::after {
+      &::after {
         content: '';
         position: absolute;
         bottom: 0;
         left: 0;
-        right: 0;
+        width: 0;
         height: 2.5px;
         background: var(--tapco-bronze-500);
         border-radius: 2px;
+        transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
       }
+      &:hover::after, &.active::after {
+        width: 100%;
+      }
+    }
+    
+    html[dir="rtl"] .nav-link::after {
+      left: auto;
+      right: 0;
     }
 
     .nav-dropdown {
       position: relative;
+    }
+
+    app-logo {
+      transition: filter 0.2s ease;
+    }
+    app-logo:hover {
+      filter: drop-shadow(0 2px 8px rgba(10, 38, 30, 0.2));
+    }
+    .btn-whatsapp {
+      position: relative;
+    }
+    .btn-whatsapp::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: inherit;
+      background: rgba(37, 211, 102, 0.4);
+      opacity: 0;
+      animation: none;
+      border-radius: var(--radius-md);
+    }
+    .btn-whatsapp:hover::before {
+      
     }
 
     .dropdown-trigger {
@@ -308,15 +345,25 @@ import { IconComponent } from '../icon.component';
       position: absolute;
       top: 100%;
       left: 0;
-      min-width: 240px;
+      min-width: 260px;
       background: #ffffff;
       border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 10px 30px rgba(10, 38, 30, 0.12);
       border: 1px solid var(--tapco-border);
       padding: 0.5rem;
-      margin-top: 0.5rem;
+      margin-top: 0;
       z-index: 1001;
-      animation: fadeIn 0.2s ease;
+    }
+
+    /* Invisible hover bridge so mouse never leaves dropdown trigger */
+    .dropdown-menu::before {
+      content: '';
+      position: absolute;
+      top: -15px;
+      left: 0;
+      right: 0;
+      height: 15px;
+      background: transparent;
     }
 
     html[dir="rtl"] .dropdown-menu {
@@ -395,6 +442,19 @@ import { IconComponent } from '../icon.component';
       flex-direction: column;
       overflow-y: auto;
       box-shadow: var(--shadow-lg);
+      margin-inline-start: 0;
+      animation: slideInDrawer 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes slideInDrawer {
+      from { transform: translateX(-100%); opacity: 0.5; }
+      to   { transform: translateX(0); opacity: 1; }
+    }
+    html[dir="rtl"] .mobile-drawer {
+      animation-name: slideInDrawerRtl;
+    }
+    @keyframes slideInDrawerRtl {
+      from { transform: translateX(100%); opacity: 0.5; }
+      to   { transform: translateX(0); opacity: 1; }
     }
 
     .drawer-header {
@@ -497,12 +557,28 @@ export class NavbarComponent implements OnInit {
   readonly isDropdownOpen = signal(false);
   readonly isMobileMenuOpen = signal(false);
   readonly rootCategories = signal<Category[]>([]);
+  private dropdownTimeout: any = null;
+
+  onDropdownEnter(): void {
+    if (this.dropdownTimeout) {
+      clearTimeout(this.dropdownTimeout);
+      this.dropdownTimeout = null;
+    }
+    this.isDropdownOpen.set(true);
+  }
+
+  onDropdownLeave(): void {
+    this.dropdownTimeout = setTimeout(() => {
+      this.isDropdownOpen.set(false);
+    }, 220);
+  }
+
 
   ngOnInit(): void {
     this.api.getCategories().subscribe({
       next: (res) => {
         if (res?.data) {
-          this.rootCategories.set(res.data);
+          this.rootCategories.set(Array.isArray(res.data) ? res.data : []);
         }
       },
       error: () => {}

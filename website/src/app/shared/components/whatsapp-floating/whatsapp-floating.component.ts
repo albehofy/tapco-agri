@@ -50,7 +50,7 @@ import { IconComponent } from '../icon.component';
       transition: transform 0.25s ease, box-shadow 0.25s ease;
 
       &:hover {
-        transform: scale(1.08);
+        
         box-shadow: 0 8px 30px rgba(37, 211, 102, 0.6);
 
         .wa-tooltip {

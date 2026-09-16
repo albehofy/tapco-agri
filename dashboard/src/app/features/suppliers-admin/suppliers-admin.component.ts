@@ -1,14 +1,15 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Supplier } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
 
+import { ModalComponent } from '../../shared/components/modal/modal.component';
+
 @Component({
   selector: 'app-suppliers-admin',
   standalone: true,
-  imports: [FormsModule, Dialog, AdminIconComponent],
+  imports: [FormsModule, AdminIconComponent, ModalComponent],
   template: `
     <div class="suppliers-page">
       <div class="page-header">
@@ -68,16 +69,12 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       }
 
       <!-- PrimeNG Dialog -->
-      <p-dialog
-        [visible]="showModal()"
+      <app-modal
+[visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        [modal]="true"
         [header]="modalMode() === 'create' ? 'إضافة مورد / شركة جديدة' : 'تعديل بيانات الشركة'"
-        [style]="{ width: '90vw', maxWidth: '480px' }"
-        [draggable]="false"
-        [resizable]="false"
-        [dismissableMask]="true"
-      >
+        
+        [dismissable]="true">
         <div class="dialog-content-body pt-2">
           <div class="form-group">
             <label>اسم الشركة <span class="req">*</span></label>
@@ -109,7 +106,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
           }
         </div>
 
-        <ng-template pTemplate="footer">
+        <div modal-footer>
           <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
           <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveSupplier()">
             @if (isSubmitting()) {
@@ -119,8 +116,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
               <span>حفظ البيانات</span>
             }
           </button>
-        </ng-template>
-      </p-dialog>
+        </div>
+      </app-modal>
     </div>
   `,
   styles: [`

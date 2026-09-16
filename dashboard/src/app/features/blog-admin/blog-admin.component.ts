@@ -1,15 +1,16 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { BlogPost } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
 
+import { ModalComponent } from '../../shared/components/modal/modal.component';
+
 @Component({
   selector: 'app-blog-admin',
   standalone: true,
-  imports: [FormsModule, CommonModule, SlicePipe, Dialog, AdminIconComponent],
+  imports: [FormsModule, CommonModule, SlicePipe, AdminIconComponent, ModalComponent],
   template: `
     <div class="blog-page">
       <div class="page-header">
@@ -78,16 +79,12 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       }
 
       <!-- PrimeNG Dialog -->
-      <p-dialog
-        [visible]="showModal()"
+      <app-modal
+[visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        [modal]="true"
         [header]="modalMode() === 'create' ? 'كتابة مقال إرشادي جديد' : 'تعديل المقال'"
-        [style]="{ width: '90vw', maxWidth: '680px' }"
-        [draggable]="false"
-        [resizable]="false"
-        [dismissableMask]="true"
-      >
+        
+        [dismissable]="true">
         <div class="dialog-content-body pt-2">
           <div class="form-tabs">
             <button class="ftab-btn" [class.active]="activeTab === 'content'" (click)="activeTab = 'content'">
@@ -183,7 +180,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
           }
         </div>
 
-        <ng-template pTemplate="footer">
+        <div modal-footer>
           <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
           <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="savePost()">
             @if (isSubmitting()) {
@@ -193,8 +190,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
               <span>حفظ المقال</span>
             }
           </button>
-        </ng-template>
-      </p-dialog>
+        </div>
+      </app-modal>
     </div>
   `,
   styles: [`

@@ -235,7 +235,7 @@ import { IconComponent } from '../../shared/components/icon.component';
       color: #ffffff;
       transition: transform 0.2s ease;
 
-      &:hover { transform: scale(1.1); }
+      &:hover {  }
 
       &.wa { background-color: #25D366; }
       &.fb { background-color: #1877F2; }

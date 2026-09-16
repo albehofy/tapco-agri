@@ -1,15 +1,15 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
-import { Select } from 'primeng/select';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Pest } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
 
+import { ModalComponent } from '../../shared/components/modal/modal.component';
+
 @Component({
   selector: 'app-pests-admin',
   standalone: true,
-  imports: [FormsModule, Dialog, Select, AdminIconComponent],
+  imports: [FormsModule, AdminIconComponent, ModalComponent],
   template: `
     <div class="pests-page">
       <div class="page-header">
@@ -71,16 +71,12 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       }
 
       <!-- PrimeNG Dialog -->
-      <p-dialog
-        [visible]="showModal()"
+      <app-modal
+[visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        [modal]="true"
         [header]="modalMode() === 'create' ? 'إضافة آفة / مرض نباتي' : 'تعديل بيانات الآفة'"
-        [style]="{ width: '90vw', maxWidth: '500px' }"
-        [draggable]="false"
-        [resizable]="false"
-        [dismissableMask]="true"
-      >
+        
+        [dismissable]="true">
         <div class="dialog-content-body pt-2">
           <div class="form-group">
             <label>اسم الآفة بالعربية <span class="req">*</span></label>
@@ -94,14 +90,14 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 
           <div class="form-group">
             <label>نوع الآفة / التصنيف البيولوجي <span class="req">*</span></label>
-            <p-select
-              [(ngModel)]="formData.type"
-              [options]="pestTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="اختر تصنيف الآفة"
-              styleClass="w-full"
-            />
+            <div class="custom-select-wrap">
+              <select class="form-select" [(ngModel)]="formData.type">
+                <option [ngValue]="null">اختر تصنيف الآفة</option>
+                @for (opt of pestTypeOptions; track opt.value) {
+                  <option [ngValue]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
           </div>
 
           <div class="form-group">
@@ -119,7 +115,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
           }
         </div>
 
-        <ng-template pTemplate="footer">
+        <div modal-footer>
           <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
           <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="savePest()">
             @if (isSubmitting()) {
@@ -129,8 +125,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
               <span>حفظ البيانات</span>
             }
           </button>
-        </ng-template>
-      </p-dialog>
+        </div>
+      </app-modal>
     </div>
   `,
   styles: [`
@@ -213,7 +209,38 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
     }
     .loading-state { padding: 3rem; text-align: center; color: var(--admin-text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem; }
     .w-full { width: 100%; }
-  `]
+  
+    .custom-select-wrap { position: relative; }
+    .form-select {
+      width: 100%;
+      padding: 0.55rem 2.25rem 0.55rem 0.75rem;
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      font-size: 0.9rem;
+      color: var(--admin-text);
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      line-height: 1.4;
+    }
+    .form-select:focus {
+      outline: none;
+      border-color: var(--admin-green-600);
+      box-shadow: 0 0 0 3px rgba(18,67,54,0.12);
+    }
+    .custom-select-wrap::after {
+      content: '';
+      position: absolute;
+      inset-inline-end: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid #53645e;
+      pointer-events: none;
+    }`]
 })
 export class PestsAdminComponent implements OnInit {
   private readonly api = inject(AdminApiService);

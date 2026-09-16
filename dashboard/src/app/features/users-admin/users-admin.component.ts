@@ -1,8 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
-import { Select } from 'primeng/select';
-import { Password } from 'primeng/password';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { PasswordInputComponent } from '../../shared/components/form-password/form-password.component';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { AdminUser, Role } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -10,7 +9,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-users-admin',
   standalone: true,
-  imports: [FormsModule, Dialog, Select, Password, AdminIconComponent],
+  imports: [FormsModule, ModalComponent, PasswordInputComponent, AdminIconComponent],
   template: `
     <div class="users-page">
       <div class="page-header">
@@ -83,15 +82,15 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       }
 
       <!-- PrimeNG Dialog -->
-      <p-dialog
+      <app-modal
         [visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        [modal]="true"
+        
         [header]="modalMode() === 'create' ? 'إضافة مستخدم جديد' : 'تعديل بيانات المستخدم'"
         [style]="{ width: '90vw', maxWidth: '480px' }"
-        [draggable]="false"
-        [resizable]="false"
-        [dismissableMask]="true"
+        
+        
+        [dismissable]="true"
       >
         <div class="dialog-content-body pt-2">
           <div class="form-group">
@@ -113,12 +112,12 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
                 <span class="req">*</span>
               }
             </label>
-            <p-password
+            <app-password-input
               [(ngModel)]="formData.password"
-              [toggleMask]="true"
-              [feedback]="false"
-              styleClass="w-full"
-              inputStyleClass="form-input w-full"
+              
+              
+              
+              class="form-input w-full"
               dir="ltr"
               placeholder="••••••••"
             />
@@ -126,13 +125,13 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 
           <div class="form-group">
             <label>الدور الوظيفي <span class="req">*</span></label>
-            <p-select
-              [(ngModel)]="formData.role_id"
-              [options]="roleOptions()"
-              optionLabel="label"
-              optionValue="value"
-              styleClass="w-full"
-            />
+            <div class="custom-select-wrap">
+              <select class="form-select" [(ngModel)]="formData.role_id">
+                @for (opt of roleOptions(); track opt.value) {
+                  <option [ngValue]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
           </div>
 
           <div class="form-group">
@@ -147,7 +146,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
           }
         </div>
 
-        <ng-template pTemplate="footer">
+        <div modal-footer>
           <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
           <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveUser()">
             @if (isSubmitting()) {
@@ -157,8 +156,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
               <span>حفظ البيانات</span>
             }
           </button>
-        </ng-template>
-      </p-dialog>
+        </div>
+      </app-modal>
     </div>
   `,
   styles: [`

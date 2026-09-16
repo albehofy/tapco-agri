@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Certificate } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -8,7 +8,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-certificates-admin',
   standalone: true,
-  imports: [FormsModule, Dialog, AdminIconComponent],
+  imports: [FormsModule, ModalComponent, AdminIconComponent],
   template: `
     <div class="certs-page">
       <div class="page-header">
@@ -60,16 +60,16 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- PrimeNG Dialog -->
-      <p-dialog
+      <!-- PrimeNG ModalComponent -->
+      <app-modal
         [visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        [modal]="true"
+        
         [header]="modalMode() === 'create' ? 'إضافة شهادة جودة جديدة' : 'تعديل بيانات الشهادة'"
         [style]="{ width: '90vw', maxWidth: '480px' }"
-        [draggable]="false"
-        [resizable]="false"
-        [dismissableMask]="true"
+        
+        
+        [dismissable]="true"
       >
         <div class="dialog-content-body pt-2">
           <div class="form-group">
@@ -102,7 +102,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
           }
         </div>
 
-        <ng-template pTemplate="footer">
+        <div modal-footer>
           <button class="btn btn-outline" (click)="closeModal()">إلغاء</button>
           <button class="btn btn-primary" [disabled]="isSubmitting()" (click)="saveCertificate()">
             @if (isSubmitting()) {
@@ -112,8 +112,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
               <span>حفظ الشهادة</span>
             }
           </button>
-        </ng-template>
-      </p-dialog>
+        </div>
+      </app-modal>
     </div>
   `,
   styles: [`

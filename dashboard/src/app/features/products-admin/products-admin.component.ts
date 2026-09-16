@@ -1,7 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
-import { Select } from 'primeng/select';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Product, Category, Supplier, Crop, Pest } from '../../core/models/admin.models';
 import { AdminIconComponent } from '../../shared/components/admin-icon.component';
@@ -9,7 +8,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 @Component({
   selector: 'app-products-admin',
   standalone: true,
-  imports: [FormsModule, Dialog, Select, AdminIconComponent],
+  imports: [FormsModule, ModalComponent, AdminIconComponent],
   template: `
     <div class="products-admin-page">
       <!-- Header -->
@@ -37,25 +36,23 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
           />
         </div>
 
-        <p-select
-          [(ngModel)]="categoryFilter"
-          (onChange)="loadProducts(1)"
-          [options]="categoryFilterOptions()"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="كافة الفئات"
-          styleClass="filter-select"
-        />
+        <div class="custom-select-wrap">
+          <select class="form-select filter-select" [(ngModel)]="categoryFilter" (change)="loadProducts(1)">
+            <option [ngValue]="''">كافة الفئات</option>
+            @for (opt of categoryFilterOptions(); track opt.value) {
+              <option [ngValue]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
 
-        <p-select
-          [(ngModel)]="activeFilter"
-          (onChange)="loadProducts(1)"
-          [options]="activeFilterOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="كافة الحالات"
-          styleClass="filter-select"
-        />
+        <div class="custom-select-wrap">
+          <select class="form-select filter-select" [(ngModel)]="activeFilter" (change)="loadProducts(1)">
+            <option [ngValue]="''">كافة الحالات</option>
+            @for (opt of activeFilterOptions; track opt.value) {
+              <option [ngValue]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
 
         <button class="btn btn-outline" (click)="loadProducts(1)">
           <span>تصفية</span>
@@ -155,15 +152,15 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       }
 
       <!-- PrimeNG Dialog for Product Add/Edit -->
-      <p-dialog
+      <app-modal
         [visible]="isModalOpen()"
         (visibleChange)="isModalOpen.set($event)"
-        [modal]="true"
+        
         [header]="isEditing() ? 'تعديل منتج: ' + editingProduct()?.name_ar : 'إضافة منتج زراعي جديد'"
         [style]="{ width: '95vw', maxWidth: '840px' }"
-        [draggable]="false"
-        [resizable]="false"
-        [dismissableMask]="true"
+        
+        
+        [dismissable]="true"
       >
         <!-- Tabs -->
         <div class="modal-tabs">
@@ -250,28 +247,24 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
             <div class="tab-pane form-grid-2">
               <div class="form-group">
                 <label class="form-label">الفئة *</label>
-                <p-select
-                  [(ngModel)]="form.category_id"
-                  name="category_id"
-                  [options]="formCategoryOptions()"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="اختر الفئة"
-                  styleClass="w-full"
-                />
+                <div class="custom-select-wrap">
+                  <select class="form-select w-full" [(ngModel)]="form.category_id" name="category_id">
+                    @for (opt of formCategoryOptions(); track opt.value) {
+                      <option [ngValue]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
               </div>
 
               <div class="form-group">
                 <label class="form-label">الشركة المصنعة / المورّد</label>
-                <p-select
-                  [(ngModel)]="form.supplier_id"
-                  name="supplier_id"
-                  [options]="formSupplierOptions()"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="لا يوجد مورد محدد"
-                  styleClass="w-full"
-                />
+                <div class="custom-select-wrap">
+                  <select class="form-select w-full" [(ngModel)]="form.supplier_id" name="supplier_id">
+                    @for (opt of formSupplierOptions(); track opt.value) {
+                      <option [ngValue]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
               </div>
 
               <div class="form-group">
@@ -281,26 +274,24 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 
               <div class="form-group">
                 <label class="form-label">كود الصياغة (EC, WP, SC, SL, WG, SG, GR, SP)</label>
-                <p-select
-                  [(ngModel)]="form.formulation_code"
-                  name="formulation_code"
-                  [options]="formulationCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  styleClass="w-full"
-                />
+                <div class="custom-select-wrap">
+                  <select class="form-select w-full" [(ngModel)]="form.formulation_code" name="formulation_code">
+                    @for (opt of formulationCodeOptions; track opt.value) {
+                      <option [ngValue]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
               </div>
 
               <div class="form-group">
                 <label class="form-label">تصنيف السمّية (Toxicity Class)</label>
-                <p-select
-                  [(ngModel)]="form.toxicity_class"
-                  name="toxicity_class"
-                  [options]="toxicityOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  styleClass="w-full"
-                />
+                <div class="custom-select-wrap">
+                  <select class="form-select w-full" [(ngModel)]="form.toxicity_class" name="toxicity_class">
+                    @for (opt of toxicityOptions; track opt.value) {
+                      <option [ngValue]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
               </div>
 
               <div class="form-group">
@@ -406,7 +397,7 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
             </button>
           </div>
         </form>
-      </p-dialog>
+      </app-modal>
     </div>
   `,
   styles: [`

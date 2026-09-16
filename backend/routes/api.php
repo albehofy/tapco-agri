@@ -79,11 +79,11 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     // Categories CRUD & Reorder
     Route::get('/categories', [AdminCategoryController::class, 'index']);
     Route::get('/categories/all', [AdminCategoryController::class, 'all']);
-    Route::post('/categories', [AdminCategoryController::class, 'store']);
-    Route::post('/categories/{id}', [AdminCategoryController::class, 'update']);
-    Route::put('/categories/{id}', [AdminCategoryController::class, 'update']);
-    Route::delete('/categories/{id}', [AdminCategoryController::class, 'destroy']);
     Route::post('/categories/reorder', [AdminCategoryController::class, 'reorder']);
+    Route::post('/categories', [AdminCategoryController::class, 'store']);
+    Route::post('/categories/{id}', [AdminCategoryController::class, 'update'])->whereNumber('id');
+    Route::put('/categories/{id}', [AdminCategoryController::class, 'update'])->whereNumber('id');
+    Route::delete('/categories/{id}', [AdminCategoryController::class, 'destroy'])->whereNumber('id');
 
     // Suppliers CRUD
     Route::get('/suppliers', [AdminSupplierController::class, 'index']);
