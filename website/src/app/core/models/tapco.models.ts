@@ -31,6 +31,7 @@ export interface Category {
   icon_url?: string | null;
   order: number;
   products_count?: number;
+  total_products_count?: number;
   children?: Category[];
   parent?: Category;
 }

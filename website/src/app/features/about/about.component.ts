@@ -385,7 +385,7 @@ export class AboutComponent implements OnInit {
 
   ngOnInit(): void {
     this.api.getBranches().subscribe({
-      next: (res) => res?.data && this.branches.set(res.data)
+      next: (res) => res?.data && this.branches.set(Array.isArray(res.data) ? res.data : [])
     });
   }
 }

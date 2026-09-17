@@ -81,15 +81,11 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- PrimeNG Dialog -->
       <app-modal
         [visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        
         [header]="modalMode() === 'create' ? 'إضافة مستخدم جديد' : 'تعديل بيانات المستخدم'"
-        [style]="{ width: '90vw', maxWidth: '480px' }"
-        
-        
+        size="md"
         [dismissable]="true"
       >
         <div class="dialog-content-body pt-2">

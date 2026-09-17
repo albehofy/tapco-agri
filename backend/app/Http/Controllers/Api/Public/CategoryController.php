@@ -12,15 +12,29 @@ class CategoryController extends Controller
 {
     public function index(): JsonResponse
     {
-        $categories = Cache::remember('public_categories_tree', 3600, function () {
-            return Category::whereNull('parent_id')
+        $fetchCategories = function () {
+            $categories = Category::whereNull('parent_id')
                 ->with(['children' => function ($query) {
                     $query->withCount('products')->orderBy('order', 'asc');
                 }])
                 ->withCount('products')
                 ->orderBy('order', 'asc')
                 ->get();
-        });
+
+            $categories->each(function ($cat) {
+                $childrenSum = $cat->children ? $cat->children->sum('products_count') : 0;
+                $cat->setAttribute('total_products_count', ($cat->products_count ?? 0) + $childrenSum);
+            });
+
+            return $categories->toArray();
+        };
+
+        $categories = Cache::remember('public_categories_tree', 3600, $fetchCategories);
+
+        if (!is_array($categories)) {
+            Cache::forget('public_categories_tree');
+            $categories = $fetchCategories();
+        }
 
         return ApiResponse::success($categories, 'Categories retrieved successfully');
     }

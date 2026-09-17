@@ -6,11 +6,13 @@ import { ApiService } from '../../core/services/api.service';
 import { Category, Product, Supplier, Crop, Pest } from '../../core/models/tapco.models';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { IconComponent } from '../../shared/components/icon.component';
+import { LoaderComponent } from '../../shared/components/loader/loader.component';
+import { SkeletonCardComponent } from '../../shared/components/skeleton-card/skeleton-card.component';
 
 @Component({
   selector: 'app-products-list',
   standalone: true,
-  imports: [FormsModule, ProductCardComponent, IconComponent],
+  imports: [FormsModule, ProductCardComponent, IconComponent, LoaderComponent, SkeletonCardComponent],
   template: `
     <div class="products-page">
       <!-- Page Hero Header -->
@@ -72,8 +74,8 @@ import { IconComponent } from '../../shared/components/icon.component';
                         (click)="selectCategory(cat.slug)"
                       >
                         <span>{{ i18n.getLocalized(cat, 'name') }}</span>
-                        @if (cat.products_count) {
-                          <span class="count-tag">{{ cat.products_count }}</span>
+                        @if (getCategoryCount(cat) > 0) {
+                          <span class="count-tag">{{ getCategoryCount(cat) }}</span>
                         }
                       </button>
 
@@ -148,7 +150,7 @@ import { IconComponent } from '../../shared/components/icon.component';
             </aside>
 
             <!-- Catalog Content Area -->
-            <div class="catalog-content">
+            <div class="catalog-content" id="catalog-content">
               <!-- Top Toolbar -->
               <div class="catalog-toolbar card-base">
                 <div class="toolbar-left">
@@ -175,9 +177,13 @@ import { IconComponent } from '../../shared/components/icon.component';
 
               <!-- Products Grid -->
               @if (isLoading()) {
-                <div class="loading-box">
-                  <div class="spinner"></div>
-                  <p>{{ i18n.currentLang() === 'ar' ? 'جاري تحميل المنتجات الزراعية...' : 'Loading agrochemicals...' }}</p>
+                <div class="loading-state-box">
+                  <app-loader size="md" [text]="i18n.currentLang() === 'ar' ? 'جاري تحميل المنتجات الزراعية المعتمدة...' : 'Loading certified agrochemical products...'" />
+                  <div class="grid-cards skeleton-grid">
+                    @for (s of [1,2,3,4,5,6]; track s) {
+                      <app-skeleton-card />
+                    }
+                  </div>
                 </div>
               } @else if (products().length === 0) {
                 <div class="empty-box card-base">
@@ -470,6 +476,13 @@ import { IconComponent } from '../../shared/components/icon.component';
       background: #ffffff;
     }
 
+    .loading-state-box {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      width: 100%;
+    }
+
     .loading-box, .empty-box {
       padding: 4rem 2rem;
       text-align: center;
@@ -657,6 +670,10 @@ export class ProductsListComponent implements OnInit {
     });
   }
 
+  getCategoryCount(cat: Category): number {
+    return cat.total_products_count ?? cat.products_count ?? (cat.children?.reduce((sum, c) => sum + (c.products_count || 0), 0) || 0);
+  }
+
   selectCategory(slug: string): void {
     this.selectedCategory.set(slug);
     this.applyFilters(1);
@@ -692,6 +709,10 @@ export class ProductsListComponent implements OnInit {
   goToPage(page: number): void {
     if (page >= 1 && page <= this.lastPage()) {
       this.applyFilters(page);
+      const catalogEl = document.getElementById('catalog-content');
+      if (catalogEl) {
+        catalogEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   }
 }

@@ -63,58 +63,79 @@ import { ModalComponent } from '../../shared/components/modal/modal.component';
         </div>
       } @else {
         <div class="table-wrap">
-          <table class="admin-table">
+          <table class="admin-table inquiries-table">
             <thead>
               <tr>
-                <th>الحالة</th>
-                <th>اسم العميل</th>
-                <th>رقم الهاتف</th>
-                <th>البريد الإلكتروني</th>
-                <th>المنتج المعني</th>
-                <th>المصدر</th>
-                <th>تاريخ الإرسال</th>
-                <th>إجراءات</th>
+                <th class="col-status">الحالة</th>
+                <th class="col-name">اسم العميل</th>
+                <th class="col-phone">رقم الهاتف</th>
+                <th class="col-email">البريد الإلكتروني</th>
+                <th class="col-product">المنتج المعني</th>
+                <th class="col-source">المصدر</th>
+                <th class="col-date">تاريخ الإرسال</th>
+                <th class="col-actions">إجراءات</th>
               </tr>
             </thead>
             <tbody>
               @for (inq of inquiries(); track inq.id) {
                 <tr [class.is-new-row]="inq.status === 'new'">
-                  <td>
+                  <td class="col-status">
                     <span class="status-pill" [class]="'status-' + inq.status">
-                      {{ getStatusText(inq.status) }}
+                      <span class="status-dot"></span>
+                      <span>{{ getStatusText(inq.status) }}</span>
                     </span>
                   </td>
-                  <td>
-                    <strong>{{ inq.name }}</strong>
+                  <td class="col-name">
+                    <div class="customer-name" [title]="inq.name">
+                      {{ inq.name }}
+                    </div>
                   </td>
-                  <td>
+                  <td class="col-phone">
                     <div class="phone-cell">
-                      <span>{{ inq.phone }}</span>
+                      <span class="phone-number" dir="ltr">{{ inq.phone }}</span>
                       <a [href]="getWhatsAppLink(inq.phone)" target="_blank" class="wa-btn" title="مراسلة واتساب">
-                        واتساب
+                        <svg class="wa-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                        </svg>
+                        <span>واتساب</span>
                       </a>
                     </div>
                   </td>
-                  <td>{{ inq.email || '-' }}</td>
-                  <td>
-                    @if (inq.product) {
-                      <span class="badge badge-green">{{ inq.product.name_ar }}</span>
+                  <td class="col-email">
+                    @if (inq.email) {
+                      <a [href]="'mailto:' + inq.email" class="email-link" dir="ltr" [title]="inq.email">
+                        {{ inq.email }}
+                      </a>
                     } @else {
-                      <span class="text-muted">استفسار عام</span>
+                      <span class="text-empty">-</span>
                     }
                   </td>
-                  <td>
-                    <span class="badge badge-gray">{{ getSourceText(inq.source) }}</span>
+                  <td class="col-product">
+                    @if (inq.product) {
+                      <span class="product-pill" [title]="inq.product.name_ar">
+                        <app-admin-icon name="package" [size]="13" />
+                        <span>{{ inq.product.name_ar }}</span>
+                      </span>
+                    } @else {
+                      <span class="general-pill">استفسار عام</span>
+                    }
                   </td>
-                  <td>{{ inq.created_at | slice:0:10 }}</td>
-                  <td>
+                  <td class="col-source">
+                    <span class="source-pill">
+                      {{ getSourceText(inq.source) }}
+                    </span>
+                  </td>
+                  <td class="col-date">
+                    <span class="date-badge" dir="ltr">{{ inq.created_at | slice:0:10 }}</span>
+                  </td>
+                  <td class="col-actions">
                     <div class="row-actions">
-                      <button class="btn btn-outline btn-sm" (click)="openDetailModal(inq)" title="عرض الرسالة وتعديل الملاحظات">
+                      <button class="btn-details" (click)="openDetailModal(inq)" title="عرض الرسالة وتعديل الملاحظات">
                         <app-admin-icon name="eye" [size]="14" />
                         <span>تفاصيل</span>
                       </button>
-                      <button class="icon-btn-sm delete" (click)="confirmDelete(inq)" title="حذف">
-                        <app-admin-icon name="trash" [size]="14" />
+                      <button class="btn-delete" (click)="confirmDelete(inq)" title="حذف الاستفسار">
+                        <app-admin-icon name="trash" [size]="15" />
                       </button>
                     </div>
                   </td>
@@ -141,11 +162,11 @@ import { ModalComponent } from '../../shared/components/modal/modal.component';
       <!-- PrimeNG Dialog -->
       @if (activeInquiry()) {
         <app-modal
-[visible]="showDetailModal()"
+          [visible]="showDetailModal()"
           (visibleChange)="showDetailModal.set($event)"
+          size="lg"
           [header]="'تفاصيل استفسار: ' + activeInquiry()!.name"
-          
-        [dismissable]="true">
+          [dismissable]="true">
           <div class="dialog-content-body pt-2">
             <div class="inquiry-info-grid">
               <div class="info-block">
@@ -233,12 +254,16 @@ import { ModalComponent } from '../../shared/components/modal/modal.component';
     .page-desc { font-size: 0.9rem; color: var(--admin-text-muted); margin-top: 0.25rem; }
 
     .filter-strip {
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--admin-border);
       padding: 0.85rem 1.25rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
+      gap: 1.25rem;
       flex-wrap: wrap;
+      box-shadow: 0 1px 3px rgba(10, 38, 30, 0.04);
     }
 
     .filter-tabs {
@@ -274,64 +299,288 @@ import { ModalComponent } from '../../shared/components/modal/modal.component';
       position: relative;
       width: 320px;
       max-width: 100%;
+      display: flex;
+      align-items: center;
     }
 
     .search-icon {
       position: absolute;
-      right: 0.85rem;
-      top: 50%;
-      transform: translateY(-50%);
+      inset-inline-end: 0.85rem;
       color: var(--admin-text-muted);
+      pointer-events: none;
     }
 
     .search-input {
-      padding-right: 2.25rem;
+      width: 100%;
+      padding: 0.55rem 0.9rem;
+      padding-inline-end: 2.4rem;
+      border: 1.5px solid var(--admin-border);
+      border-radius: var(--radius-full);
+      font-size: 0.875rem;
+      background: #fbfdfc;
+      transition: all 0.2s ease;
+
+      &:focus {
+        outline: none;
+        background: #ffffff;
+        border-color: var(--admin-green-600);
+        box-shadow: 0 0 0 3px rgba(18, 67, 54, 0.1);
+      }
+    }
+
+    /* Inquiries Table No-Wrap & Refinements */
+    .inquiries-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+
+      th, td {
+        white-space: nowrap !important;
+        vertical-align: middle;
+      }
+
+      th {
+        padding: 0.95rem 1.25rem;
+        user-select: none;
+      }
+
+      td {
+        padding: 1rem 1.25rem;
+      }
+
+      .col-status { width: 130px; text-align: center; }
+      .col-name { min-width: 200px; }
+      .col-phone { min-width: 180px; }
+      .col-email { min-width: 185px; }
+      .col-product { min-width: 175px; }
+      .col-source { min-width: 130px; }
+      .col-date { min-width: 115px; }
+      .col-actions { width: 130px; text-align: center; }
     }
 
     .is-new-row {
-      background: rgba(196, 138, 68, 0.05);
-      font-weight: 600;
+      background: #fffcf4 !important;
+
+      td {
+        border-bottom-color: #fef3c7;
+      }
+
+      &:hover td {
+        background: #fefce8 !important;
+      }
+    }
+
+    .customer-name {
+      display: block;
+      font-weight: 700;
+      color: var(--admin-green-950, #061e18);
+      font-size: 0.925rem;
+      white-space: nowrap !important;
+      letter-spacing: -0.01em;
     }
 
     .status-pill {
-      display: inline-block;
-      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.775rem;
       font-weight: 700;
-      padding: 0.25rem 0.6rem;
-      border-radius: var(--radius-full);
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      white-space: nowrap !important;
+      line-height: 1.2;
 
-      &.status-new { background: #fef3c7; color: #92400e; }
-      &.status-contacted { background: #e0e7ff; color: #3730a3; }
-      &.status-closed { background: #dcfce7; color: #166534; }
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      &.status-new {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
+        .status-dot {
+          background: #f59e0b;
+          box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+        }
+      }
+
+      &.status-contacted {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+        .status-dot {
+          background: #3b82f6;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+        }
+      }
+
+      &.status-closed {
+        background: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+        .status-dot {
+          background: #22c55e;
+          box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+        }
+      }
     }
 
     .phone-cell {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.65rem;
+      direction: ltr;
+      white-space: nowrap !important;
+    }
+
+    .phone-number {
+      font-family: var(--font-latin);
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.875rem;
+      letter-spacing: 0.02em;
     }
 
     .wa-btn {
-      font-size: 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.725rem;
+      font-weight: 700;
       background: #25d366;
       color: #ffffff;
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
+      padding: 0.22rem 0.55rem;
+      border-radius: 6px;
       text-decoration: none;
-      font-weight: 700;
+      transition: all 0.18s ease;
+      box-shadow: 0 1px 3px rgba(37, 211, 102, 0.25);
+      white-space: nowrap !important;
 
-      &:hover { opacity: 0.9; }
+      &:hover {
+        background: #1ebc57;
+      }
+
+      .wa-icon {
+        flex-shrink: 0;
+      }
+    }
+
+    .email-link {
+      color: #475569;
+      font-size: 0.85rem;
+      font-family: var(--font-latin);
+      text-decoration: none;
+      transition: color 0.15s ease;
+      white-space: nowrap !important;
+
+      &:hover {
+        color: var(--admin-green-700);
+        text-decoration: underline;
+      }
+    }
+
+    .text-empty {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .product-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      font-weight: 600;
+      font-size: 0.8rem;
+      white-space: nowrap !important;
+    }
+
+    .general-pill {
+      display: inline-block;
+      padding: 0.35rem 0.8rem;
+      border-radius: 9999px;
+      background: #f8fafc;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+      font-size: 0.8rem;
+      font-weight: 500;
+      white-space: nowrap !important;
+    }
+
+    .source-pill {
+      display: inline-block;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      font-size: 0.775rem;
+      font-weight: 600;
+      white-space: nowrap !important;
+    }
+
+    .date-badge {
+      color: #64748b;
+      font-size: 0.85rem;
+      font-family: var(--font-latin);
+      font-weight: 500;
+      white-space: nowrap !important;
     }
 
     .row-actions {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
+      justify-content: center;
+      gap: 0.45rem;
+      white-space: nowrap !important;
     }
 
-    .icon-btn-sm {
-      background: none; border: none; padding: 0.35rem; border-radius: var(--radius-sm); cursor: pointer; color: var(--admin-text-muted);
-      &.delete:hover { color: #ef4444; background: #fef2f2; }
+    .btn-details {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #d1ded8;
+      background: #ffffff;
+      color: var(--admin-green-900, #0a261e);
+      font-size: 0.825rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap !important;
+
+      &:hover {
+        background: var(--admin-green-50, #f0f7f4);
+        border-color: var(--admin-green-600, #185948);
+        color: var(--admin-green-700, #124336);
+      }
+    }
+
+    .btn-delete {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: #fee2e2;
+        color: #dc2626;
+        border-color: #fca5a5;
+      }
     }
 
     .pagination-bar {

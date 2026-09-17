@@ -10,9 +10,9 @@ import { IconComponent } from '../icon.component';
   imports: [RouterLink, IconComponent],
   template: `
     <div class="product-card">
-      <!-- Card Media -->
+      <!-- Card Media Frame -->
       <div class="card-media">
-        <a [routerLink]="['/products', product.slug]" class="media-link" [title]="i18n.getLocalized(product, 'name')">
+        <a [routerLink]="['/products', product.slug]" class="media-link">
           <img
             [src]="product.main_image_url || '/images/product-bottle.jpg'"
             [alt]="i18n.getLocalized(product, 'name')"
@@ -25,8 +25,11 @@ import { IconComponent } from '../icon.component';
         <div class="media-badges">
           @if (product.category) {
             <span class="cat-pill">
-              {{ i18n.getLocalized(product.category, 'name') }}
+              <app-icon name="leaf" [size]="11" class="pill-icon" />
+              <span>{{ i18n.getLocalized(product.category, 'name') }}</span>
             </span>
+          } @else {
+            <span></span>
           }
           @if (product.is_featured) {
             <span class="featured-badge">
@@ -34,47 +37,54 @@ import { IconComponent } from '../icon.component';
             </span>
           }
         </div>
-
-        <!-- Formulation Tag Floating -->
-        @if (product.formulation_code) {
-          <div class="formulation-floating-tag">
-            {{ product.formulation_code }}
-          </div>
-        }
       </div>
 
       <!-- Card Body -->
       <div class="card-body">
+        <!-- Category Eyebrow -->
+        @if (product.category) {
+          <span class="category-eyebrow">
+            {{ i18n.getLocalized(product.category, 'name') }}
+          </span>
+        }
+
+        <!-- Product Title -->
         <h3 class="product-title">
           <a [routerLink]="['/products', product.slug]">
             {{ i18n.getLocalized(product, 'name') }}
           </a>
         </h3>
 
+        <!-- Active Ingredient Block -->
         @if (product.active_ingredient_ar || product.active_ingredient_en) {
-          <div class="active-ingredient">
-            <span class="ai-label">{{ i18n.t('product.active_ingredient') }}:</span>
-            <span class="ai-val">{{ i18n.getLocalized(product, 'active_ingredient') }}</span>
+          <div class="active-ingredient-card">
+            <span class="ai-label">{{ i18n.t('product.active_ingredient') }}</span>
+            <span class="ai-val" [title]="i18n.getLocalized(product, 'active_ingredient')">
+              {{ i18n.getLocalized(product, 'active_ingredient') }}
+            </span>
           </div>
         }
 
-        <!-- Technical Specs Pills -->
-        <div class="specs-row">
-          @if (product.concentration) {
-            <span class="spec-tag conc-tag">
-              {{ product.concentration }}
+        <!-- Technical Specs Strip (3-Column Clean Micro Sheet) -->
+        <div class="specs-grid">
+          <div class="spec-col">
+            <span class="spec-col-lbl">{{ i18n.currentLang() === 'ar' ? 'التركيز' : 'FORMULATION' }}</span>
+            <span class="spec-col-val" [title]="product.concentration || product.formulation_code || '—'">
+              {{ product.concentration || product.formulation_code || '—' }}
             </span>
-          }
-          @if (product.pre_harvest_interval !== null && product.pre_harvest_interval !== undefined) {
-            <span class="spec-tag phi-tag">
-              PHI: {{ product.pre_harvest_interval }} {{ i18n.t('product.days') }}
+          </div>
+          <div class="spec-col">
+            <span class="spec-col-lbl">{{ i18n.currentLang() === 'ar' ? 'الأمان' : 'PHI' }}</span>
+            <span class="spec-col-val phi">
+              {{ product.pre_harvest_interval !== null && product.pre_harvest_interval !== undefined ? product.pre_harvest_interval + ' ' + i18n.t('product.days') : '—' }}
             </span>
-          }
-          @if (product.toxicity_class) {
-            <span class="spec-tag tox-tag tox-{{ product.toxicity_class }}">
-              Class {{ product.toxicity_class }}
+          </div>
+          <div class="spec-col">
+            <span class="spec-col-lbl">{{ i18n.currentLang() === 'ar' ? 'السمّية' : 'TOXICITY' }}</span>
+            <span class="spec-col-val tox" [class]="'tox-' + product.toxicity_class">
+              {{ product.toxicity_class ? 'Class ' + product.toxicity_class : '—' }}
             </span>
-          }
+          </div>
         </div>
       </div>
 
@@ -82,7 +92,9 @@ import { IconComponent } from '../icon.component';
       <div class="card-footer">
         <a [routerLink]="['/products', product.slug]" class="btn-card-details">
           <span>{{ i18n.t('catalog.details') }}</span>
-          <app-icon [name]="i18n.isRtl() ? 'arrow-left' : 'arrow-right'" [size]="15" />
+          <div class="btn-arrow-circle">
+            <app-icon [name]="i18n.isRtl() ? 'arrow-left' : 'arrow-right'" [size]="13" />
+          </div>
         </a>
       </div>
     </div>
@@ -92,29 +104,30 @@ import { IconComponent } from '../icon.component';
       display: flex;
       flex-direction: column;
       background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid #e5ece8;
-      overflow: hidden;
+      border-radius: 20px;
+      border: 1px solid #e1e9e5;
+      padding: 0.75rem;
       height: 100%;
-      box-shadow: 0 2px 10px rgba(10, 45, 34, 0.04);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 20px rgba(10, 38, 30, 0.04);
+      transition: border-color 0.25s ease, background-color 0.25s ease;
 
       &:hover {
-        
-        box-shadow: 0 12px 30px rgba(10, 45, 34, 0.1);
-        border-color: #c4883b;
+        border-color: rgba(196, 138, 68, 0.5);
 
         .product-img {
-          
+          transform: scale(1.05);
+        }
+
+        .active-ingredient-card {
+          background: #eef6f2;
         }
 
         .btn-card-details {
-          background: #0f382c;
-          color: #ffffff;
-          border-color: #0f382c;
+          background: #154c3e;
+          border-color: #154c3e;
 
-          app-icon {
-            
+          .btn-arrow-circle {
+            background: rgba(255, 255, 255, 0.25);
           }
         }
       }
@@ -122,183 +135,250 @@ import { IconComponent } from '../icon.component';
 
     .card-media {
       position: relative;
-      background: #fbfcfb;
-      border-bottom: 1px solid #edf2ef;
+      background: #f1f3f2;
+      border-radius: 14px;
       aspect-ratio: 1 / 1;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: block;
     }
 
     .media-link {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: block;
       width: 100%;
       height: 100%;
-      padding: 1.25rem;
+      padding: 0;
+      position: relative;
+      background: #f1f3f2;
     }
 
     .product-img {
-      max-width: 85%;
-      max-height: 85%;
-      object-fit: contain;
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .media-badges {
       position: absolute;
-      top: 0.75rem;
-      left: 0.75rem;
-      right: 0.75rem;
+      top: 0.65rem;
+      left: 0.65rem;
+      right: 0.65rem;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: 0.5rem;
       pointer-events: none;
-      z-index: 2;
+      z-index: 3;
     }
 
     .cat-pill {
-      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.725rem;
       font-weight: 700;
       color: #0f382c;
-      background: rgba(220, 240, 232, 0.95);
-      border: 1px solid rgba(15, 56, 44, 0.15);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(18, 67, 54, 0.12);
       padding: 0.25rem 0.65rem;
       border-radius: 9999px;
-      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 8px rgba(10, 38, 30, 0.06);
+
+      .pill-icon {
+        color: var(--tapco-green-600);
+      }
     }
 
     .featured-badge {
-      font-size: 0.725rem;
-      font-weight: 700;
-      color: #8c5d25;
-      background: rgba(250, 235, 217, 0.95);
-      border: 1px solid rgba(196, 138, 68, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #ffffff;
+      background: linear-gradient(135deg, #c4883b 0%, #a46d2a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.35);
       padding: 0.25rem 0.65rem;
       border-radius: 9999px;
-      backdrop-filter: blur(4px);
-    }
-
-    .formulation-floating-tag {
-      position: absolute;
-      bottom: 0.65rem;
-      inset-inline-end: 0.65rem;
-      font-family: var(--font-latin);
-      font-size: 0.75rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      color: #ffffff;
-      background: #0f382c;
-      padding: 0.2rem 0.55rem;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 8px rgba(196, 138, 68, 0.25);
     }
 
     .card-body {
-      padding: 1.25rem;
+      padding: 0.85rem 0.25rem 0.5rem;
       display: flex;
       flex-direction: column;
       gap: 0.65rem;
       flex: 1;
     }
 
-    .product-title {
-      font-size: 1.05rem;
+    .category-eyebrow {
+      font-size: 0.7rem;
       font-weight: 700;
-      line-height: 1.4;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--tapco-green-600);
+      line-height: 1;
+    }
+
+    .product-title {
+      font-size: 1.125rem;
+      font-weight: 800;
+      line-height: 1.35;
+      letter-spacing: -0.015em;
       margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 2.7em;
 
       a {
         color: #0a261e;
+        text-decoration: none;
         transition: color 0.2s ease;
 
         &:hover {
-          color: #c4883b;
+          color: var(--tapco-green-700);
         }
       }
     }
 
-    .active-ingredient {
-      font-size: 0.825rem;
-      line-height: 1.5;
-      color: #53645e;
-
-      .ai-label {
-        font-weight: 600;
-        color: #0f382c;
-        margin-inline-end: 0.35rem;
-      }
-
-      .ai-val {
-        color: #64748b;
-      }
-    }
-
-    .specs-row {
+    .active-ingredient-card {
+      background: #f7faf8;
+      border-radius: 8px;
+      border: 1px solid #eaf0ec;
+      border-inline-start: 3px solid var(--tapco-green-600);
+      padding: 0.45rem 0.75rem;
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-      margin-top: auto;
-      padding-top: 0.5rem;
+      flex-direction: column;
+      gap: 0.15rem;
+      transition: background-color 0.2s ease;
     }
 
-    .spec-tag {
-      font-size: 0.725rem;
-      font-weight: 600;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      border: 1px solid #e2e8e4;
-      background: #f8faf9;
-      color: #475569;
-    }
-
-    .phi-tag {
-      background: #fef3c7;
-      color: #92400e;
-      border-color: #fde68a;
-    }
-
-    .tox-tag {
+    .ai-label {
+      font-size: 0.65rem;
       font-weight: 700;
-      &.tox-I { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
-      &.tox-II { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
-      &.tox-III { background: #e0f2fe; color: #075985; border-color: #bae6fd; }
-      &.tox-IV { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--tapco-green-700);
+    }
+
+    .ai-val {
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: #12382c;
+      line-height: 1.35;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.35rem;
+      padding: 0.5rem 0.6rem;
+      background: #f8faf9;
+      border-radius: 10px;
+      border: 1px solid #eef3f0;
+      margin-top: auto;
+    }
+
+    .spec-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      align-items: center;
+      text-align: center;
+      border-inline-end: 1px solid #e2ece7;
+
+      &:last-child {
+        border-inline-end: none;
+      }
+    }
+
+    .spec-col-lbl {
+      font-size: 0.625rem;
+      font-weight: 700;
+      color: #71877f;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .spec-col-val {
+      font-size: 0.775rem;
+      font-weight: 700;
+      color: #0f382c;
+      font-family: var(--font-latin);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+
+      &.phi {
+        color: #b45309;
+      }
+
+      &.tox {
+        &.tox-I   { color: #b91c1c; }
+        &.tox-II  { color: #c2410c; }
+        &.tox-III { color: #0284c7; }
+        &.tox-IV  { color: #16a34a; }
+      }
     }
 
     .card-footer {
-      padding: 0.85rem 1.25rem 1.15rem;
-      border-top: 1px solid #edf2ef;
+      padding: 0.25rem 0.25rem 0.25rem;
+      background: transparent;
     }
 
     .btn-card-details {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+      justify-content: space-between;
       width: 100%;
-      padding: 0.6rem 1rem;
+      padding: 0.65rem;
+      padding-inline-start: 1.15rem;
+      padding-inline-end: 0.75rem;
       font-size: 0.875rem;
       font-weight: 700;
-      border-radius: 8px;
-      background: #f4f7f5;
-      color: #0f382c;
-      border: 1px solid #dce4e0;
-      transition: all 0.25s ease;
+      border-radius: 12px;
+      background: #0e372c;
+      color: #ffffff;
+      border: 1px solid #0e372c;
+      text-decoration: none;
+      transition: background 0.22s ease, border-color 0.22s ease;
 
-      app-icon {
-        transition: transform 0.25s ease;
+      .btn-arrow-circle {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background 0.22s ease, transform 0.22s ease;
+      }
+
+      &:hover {
+        background: #154c3e;
+        border-color: #154c3e;
+
+        .btn-arrow-circle {
+          background: rgba(255, 255, 255, 0.25);
+        }
       }
     }
 
-    html[dir="rtl"] .btn-card-details:hover app-icon {
-      
+    html[dir="rtl"] .product-card:hover .btn-card-details .btn-arrow-circle {
+      transform: translateX(-3px);
     }
-    html[dir="ltr"] .btn-card-details:hover app-icon {
-      
+    html[dir="ltr"] .product-card:hover .btn-card-details .btn-arrow-circle {
+      transform: translateX(3px);
     }
   `]
 })

@@ -148,7 +148,6 @@ import { IconComponent } from '../icon.component';
 
       &:hover {
         background: var(--tapco-bronze-500);
-        
       }
     }
 
@@ -190,13 +189,15 @@ import { IconComponent } from '../icon.component';
 
         &:hover {
           color: var(--tapco-bronze-400);
-          
         }
       }
     }
 
     html[dir="rtl"] .col-links li a:hover {
-      
+      transform: translateX(-4px);
+    }
+    html[dir="ltr"] .col-links li a:hover {
+      transform: translateX(4px);
     }
 
     .footer-contacts {
@@ -264,7 +265,6 @@ import { IconComponent } from '../icon.component';
       background: var(--tapco-bronze-500);
       border-color: var(--tapco-bronze-500);
       color: #fff;
-      
     }
     .iso-badge {
       display: inline-block;

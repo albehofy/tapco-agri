@@ -85,15 +85,11 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- PrimeNG ModalComponent -->
       <app-modal
         [visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        
         [header]="modalMode() === 'create' ? 'إضافة فرع جديد' : 'تعديل بيانات الفرع'"
-        [style]="{ width: '90vw', maxWidth: '600px' }"
-        
-        
+        size="lg"
         [dismissable]="true"
       >
         <div class="form-grid pt-2">

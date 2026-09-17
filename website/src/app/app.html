@@ -1,6 +1,15 @@
+<!-- Top Route & HTTP Global Progress Bar -->
+<div class="global-progress-bar" [class.active]="loadingService.isLoading()">
+  <div class="progress-bar-fill"></div>
+</div>
+
 <app-navbar />
 <main class="main-content">
   <router-outlet />
 </main>
 <app-footer />
 <app-whatsapp-floating />
+
+@if (loadingService.manualLoading()) {
+  <app-loader mode="fullscreen" size="lg" />
+}

@@ -17,8 +17,19 @@ class SupplierController extends Controller
                 ->withCount(['products' => function ($q) {
                     $q->where('is_active', true);
                 }])
-                ->get();
+                ->get()
+                ->toArray();
         });
+
+        if (!is_array($suppliers)) {
+            Cache::forget('public_suppliers');
+            $suppliers = Supplier::orderBy('order', 'asc')
+                ->withCount(['products' => function ($q) {
+                    $q->where('is_active', true);
+                }])
+                ->get()
+                ->toArray();
+        }
 
         return ApiResponse::success($suppliers, 'Suppliers retrieved successfully');
     }

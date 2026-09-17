@@ -80,10 +80,10 @@ import { ModalComponent } from '../../shared/components/modal/modal.component';
 
       <!-- PrimeNG Dialog -->
       <app-modal
-[visible]="showModal()"
+        [visible]="showModal()"
         (visibleChange)="showModal.set($event)"
+        size="lg"
         [header]="modalMode() === 'create' ? 'كتابة مقال إرشادي جديد' : 'تعديل المقال'"
-        
         [dismissable]="true">
         <div class="dialog-content-body pt-2">
           <div class="form-tabs">

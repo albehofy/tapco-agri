@@ -5,16 +5,16 @@ import { I18nService } from '../../core/services/i18n.service';
 import { ApiService } from '../../core/services/api.service';
 import { BlogPost } from '../../core/models/tapco.models';
 import { IconComponent } from '../../shared/components/icon.component';
+import { LoaderComponent } from '../../shared/components/loader/loader.component';
 
 @Component({
   selector: 'app-blog-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe, IconComponent],
+  imports: [RouterLink, DatePipe, IconComponent, LoaderComponent],
   template: `
     @if (isLoading()) {
-      <div class="loading-box">
-        <div class="spinner"></div>
-        <p>{{ i18n.currentLang() === 'ar' ? 'جاري تحميل المقال...' : 'Loading article...' }}</p>
+      <div class="loading-container">
+        <app-loader size="lg" [text]="i18n.currentLang() === 'ar' ? 'جاري تحميل تفاصيل المقال...' : 'Loading article details...'" />
       </div>
     } @else if (!post()) {
       <div class="tapco-container section-padding">

@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { LoadingService } from '../../../core/services/loading.service';
 import { AdminIconComponent } from '../admin-icon.component';
 
 @Component({
@@ -129,6 +130,12 @@ import { AdminIconComponent } from '../admin-icon.component';
 
           <div class="topbar-left">
             <span class="dashboard-badge">نظام إدارة مصنع TAPCO الزراعي</span>
+            @if (loading.isLoading()) {
+              <div class="topbar-sync-indicator">
+                <span class="sync-dot"></span>
+                <span>جاري المزامنة...</span>
+              </div>
+            }
           </div>
 
           <div class="topbar-right">
@@ -171,6 +178,13 @@ import { AdminIconComponent } from '../admin-icon.component';
       z-index: 1000;
       box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
       flex-shrink: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      &::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+      }
     }
 
     .sidebar-header {
@@ -227,9 +241,17 @@ import { AdminIconComponent } from '../admin-icon.component';
       flex: 1;
       padding: 1.25rem 0.85rem;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      &::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+      }
     }
 
     .nav-section-label {
@@ -364,7 +386,8 @@ import { AdminIconComponent } from '../admin-icon.component';
 
     .admin-page-content {
       flex: 1;
-      padding: 1.75rem;
+      padding: 2.25rem 2.25rem 4rem;
+      min-height: calc(100vh - 64px);
     }
 
     @media (max-width: 991px) {
@@ -396,10 +419,38 @@ import { AdminIconComponent } from '../admin-icon.component';
         z-index: 999;
       }
     }
+
+    .topbar-sync-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--admin-green-800);
+      background: var(--admin-green-50);
+      padding: 0.2rem 0.65rem;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(18, 67, 54, 0.15);
+    }
+
+    .sync-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--admin-bronze-500);
+      box-shadow: 0 0 6px var(--admin-bronze-500);
+      animation: pulse-sync-dot 1.2s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulse-sync-dot {
+      0% { opacity: 0.3; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1.15); }
+    }
   `]
 })
 export class DashboardLayoutComponent {
   readonly auth = inject(AuthService);
+  readonly loading = inject(LoadingService);
   readonly isMobileSidebarOpen = signal(false);
 
   closeMobile(): void {

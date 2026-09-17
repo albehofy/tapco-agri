@@ -63,13 +63,13 @@ import { ModalComponent } from '../../shared/components/modal/modal.component';
         </div>
       }
 
-      <!-- PrimeNG Dialog -->
       <app-modal
-[visible]="showModal()"
+        [visible]="showModal()"
         (visibleChange)="showModal.set($event)"
         [header]="modalMode() === 'create' ? 'إضافة محصول زراعي جديد' : 'تعديل بيانات المحصول'"
-        
-        [dismissable]="true">
+        size="md"
+        [dismissable]="true"
+      >
         <div class="dialog-content-body pt-2">
           <div class="form-group">
             <label>اسم المحصول بالعربية <span class="req">*</span></label>

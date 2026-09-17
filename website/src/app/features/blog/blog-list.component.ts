@@ -6,11 +6,12 @@ import { I18nService } from '../../core/services/i18n.service';
 import { ApiService } from '../../core/services/api.service';
 import { BlogPost } from '../../core/models/tapco.models';
 import { IconComponent } from '../../shared/components/icon.component';
+import { LoaderComponent } from '../../shared/components/loader/loader.component';
 
 @Component({
   selector: 'app-blog-list',
   standalone: true,
-  imports: [RouterLink, FormsModule, DatePipe, IconComponent],
+  imports: [RouterLink, FormsModule, DatePipe, IconComponent, LoaderComponent],
   template: `
     <div class="blog-page">
       <!-- Page Hero Header -->
@@ -42,10 +43,7 @@ import { IconComponent } from '../../shared/components/icon.component';
           </div>
 
           @if (isLoading()) {
-            <div class="loading-box">
-              <div class="spinner"></div>
-              <p>{{ i18n.currentLang() === 'ar' ? 'جاري تحميل المقالات...' : 'Loading articles...' }}</p>
-            </div>
+            <app-loader size="md" [text]="i18n.currentLang() === 'ar' ? 'جاري تحميل المقالات والأبحاث الزراعية...' : 'Loading agricultural research & articles...'" />
           } @else if (posts().length === 0) {
             <div class="empty-box card-base">
               <app-icon name="layers" [size]="52" class="empty-icon" />

@@ -4,11 +4,12 @@ import { ApiService } from '../../core/services/api.service';
 import { Crop, Pest, Product } from '../../core/models/tapco.models';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { IconComponent } from '../../shared/components/icon.component';
+import { LoaderComponent } from '../../shared/components/loader/loader.component';
 
 @Component({
   selector: 'app-solutions',
   standalone: true,
-  imports: [ProductCardComponent, IconComponent],
+  imports: [ProductCardComponent, IconComponent, LoaderComponent],
   template: `
     <div class="solutions-page">
       <!-- Page Hero Header -->
@@ -88,10 +89,7 @@ import { IconComponent } from '../../shared/components/icon.component';
             </div>
 
             @if (isLoading()) {
-              <div class="loading-box">
-                <div class="spinner"></div>
-                <p>{{ i18n.currentLang() === 'ar' ? 'جاري مطابقة المركبات العلاجية...' : 'Matching chemical treatments...' }}</p>
-              </div>
+              <app-loader size="md" [text]="i18n.currentLang() === 'ar' ? 'جاري فحص بروتوكولات المكافحة ومطابقة المركبات...' : 'Matching chemical treatment protocols...'" />
             } @else if (matchedProducts().length === 0) {
               <div class="empty-state card-base">
                 <app-icon name="shield" [size]="52" class="empty-icon" />

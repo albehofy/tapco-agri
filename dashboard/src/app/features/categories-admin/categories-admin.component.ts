@@ -99,15 +99,11 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- PrimeNG Dialog -->
       <app-modal
         [visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        
         [header]="modalMode() === 'create' ? 'إضافة فئة جديدة' : 'تعديل بيانات الفئة'"
-        [style]="{ width: '90vw', maxWidth: '560px' }"
-        
-        
+        size="md"
         [dismissable]="true"
       >
         <div class="form-grid pt-2">

@@ -155,20 +155,19 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       <app-modal
         [visible]="isModalOpen()"
         (visibleChange)="isModalOpen.set($event)"
-        
         [header]="isEditing() ? 'تعديل منتج: ' + editingProduct()?.name_ar : 'إضافة منتج زراعي جديد'"
-        [style]="{ width: '95vw', maxWidth: '840px' }"
-        
-        
+        [subtitle]="isEditing() ? 'تعديل المواصفات الفنية، صور العبوات، والملفات المعتمدة' : 'أدخل بيانات المركب والمواصفات والآفات المستهدفة'"
+        size="xl"
+        [style]="{ width: '95vw', maxWidth: '980px' }"
         [dismissable]="true"
       >
         <!-- Tabs -->
         <div class="modal-tabs">
-          <button class="tab-btn" [class.active]="activeTab === 'ar'" (click)="activeTab = 'ar'">البيانات بالعربية</button>
-          <button class="tab-btn" [class.active]="activeTab === 'en'" (click)="activeTab = 'en'">English Data</button>
-          <button class="tab-btn" [class.active]="activeTab === 'specs'" (click)="activeTab = 'specs'">المواصفات والتصنيف</button>
-          <button class="tab-btn" [class.active]="activeTab === 'targets'" (click)="activeTab = 'targets'">المحاصيل والآفات</button>
-          <button class="tab-btn" [class.active]="activeTab === 'files'" (click)="activeTab = 'files'">الملفات والصور والـ PDF</button>
+          <button type="button" class="tab-btn" [class.active]="activeTab === 'ar'" (click)="activeTab = 'ar'">البيانات بالعربية</button>
+          <button type="button" class="tab-btn" [class.active]="activeTab === 'en'" (click)="activeTab = 'en'">English Data</button>
+          <button type="button" class="tab-btn" [class.active]="activeTab === 'specs'" (click)="activeTab = 'specs'">المواصفات والتصنيف</button>
+          <button type="button" class="tab-btn" [class.active]="activeTab === 'targets'" (click)="activeTab = 'targets'">المحاصيل والآفات</button>
+          <button type="button" class="tab-btn" [class.active]="activeTab === 'files'" (click)="activeTab = 'files'">الملفات والصور والـ PDF</button>
         </div>
 
         <form (submit)="saveProduct($event)" class="modal-form">
@@ -536,22 +535,45 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
 
     .modal-tabs {
       display: flex;
-      border-bottom: 1px solid var(--admin-border);
-      gap: 0.5rem;
+      align-items: center;
+      background: #f1f5f3;
+      padding: 0.35rem;
+      border-radius: var(--radius-md);
+      gap: 0.35rem;
       overflow-x: auto;
-      margin-bottom: 1rem;
+      margin-bottom: 1.75rem;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+      &::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+      }
 
       .tab-btn {
+        flex: 1;
         padding: 0.65rem 1rem;
         font-size: 0.85rem;
-        font-weight: 700;
+        font-weight: 600;
         color: var(--admin-text-muted);
-        border-bottom: 2px solid transparent;
+        border-radius: var(--radius-sm);
         white-space: nowrap;
+        transition: all 0.15s ease;
+        text-align: center;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+
+        &:hover {
+          color: var(--admin-green-900);
+          background: rgba(255, 255, 255, 0.6);
+        }
 
         &.active {
-          color: var(--admin-green-800);
-          border-bottom-color: var(--admin-bronze-500);
+          color: var(--admin-green-900);
+          background: #ffffff;
+          font-weight: 700;
+          box-shadow: 0 2px 8px rgba(10, 38, 30, 0.08);
         }
       }
     }
@@ -559,10 +581,8 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
     .tab-pane {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      max-height: 60vh;
-      overflow-y: auto;
-      padding-left: 0.5rem;
+      gap: 1.25rem;
+      padding-bottom: 1rem;
     }
 
     .form-grid-2 {
@@ -663,8 +683,13 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      gap: 0.75rem;
+      gap: 0.85rem;
       border-top: 1px solid var(--admin-border);
+      position: sticky;
+      bottom: -2.5rem;
+      background: #ffffff;
+      padding: 1.25rem 0 0.5rem;
+      z-index: 20;
     }
 
     .error-box {

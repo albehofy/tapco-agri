@@ -47,11 +47,10 @@ import { IconComponent } from '../icon.component';
       background-color: #25D366;
       color: #ffffff;
       box-shadow: 0 6px 24px rgba(37, 211, 102, 0.45);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      transition: background-color 0.25s ease;
 
       &:hover {
-        
-        box-shadow: 0 8px 30px rgba(37, 211, 102, 0.6);
+        background-color: #1ebc57;
 
         .wa-tooltip {
           opacity: 1;

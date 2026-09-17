@@ -185,28 +185,27 @@ import { IconComponent } from '../icon.component';
   `,
   styles: [`
     .tapco-header {
-      margin-bottom: 1.5rem;
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: var(--tapco-bg-surface);
-      box-shadow: var(--shadow-sm);
-      backdrop-filter: blur(0px);
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(255, 255, 255, 0.98);
+      border-bottom: 1px solid rgba(18, 67, 54, 0.08);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       &.is-scrolled {
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        box-shadow: 0 4px 24px rgba(10, 38, 30, 0.1), 0 1px 0 rgba(196, 138, 68, 0.2);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 4px 24px rgba(10, 38, 30, 0.08), 0 1px 0 rgba(196, 138, 68, 0.2);
+        border-bottom-color: rgba(196, 138, 68, 0.3);
       }
     }
 
     .top-bar {
-      background-color: var(--tapco-green-900);
+      background: linear-gradient(135deg, var(--tapco-green-950) 0%, var(--tapco-green-900) 100%);
       color: #e5ede9;
       font-size: 0.8125rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 0.35rem 0;
+      padding: 0.38rem 0;
     }
 
     .top-bar-content {
@@ -225,8 +224,9 @@ import { IconComponent } from '../icon.component';
     .top-item {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      color: #c9d8d1;
+      gap: 0.45rem;
+      color: #b9d0c6;
+      font-weight: 500;
       a {
         color: inherit;
         &:hover { color: #ffffff; }
@@ -236,22 +236,25 @@ import { IconComponent } from '../icon.component';
     .lang-btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.4rem;
       background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
-      padding: 0.25rem 0.65rem;
+      padding: 0.28rem 0.75rem;
       border-radius: var(--radius-full);
       font-size: 0.75rem;
-      font-weight: 600;
-      transition: background 0.2s ease;
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.2s ease;
       &:hover {
         background: rgba(255, 255, 255, 0.22);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.02);
       }
     }
 
     .main-navbar {
-      padding: 0.75rem 0;
-      background: #ffffff;
+      padding: 0.85rem 0;
+      background: transparent;
     }
 
     .nav-container {

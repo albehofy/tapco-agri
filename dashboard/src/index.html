@@ -11,6 +11,95 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <div id="tapco-admin-initial-loader" style="
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: radial-gradient(circle at center, #0a261e 0%, #051914 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Sans Arabic', 'Cairo', system-ui, sans-serif;
+      color: #ffffff;
+      user-select: none;
+    ">
+      <style>
+        @keyframes admin-spin-outer {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes admin-spin-inner {
+          0% { transform: rotate(360deg); }
+          100% { transform: rotate(0deg); }
+        }
+        @keyframes admin-pulse-glow {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(24, 89, 72, 0.6); }
+          50% { transform: scale(1.06); box-shadow: 0 0 45px rgba(196, 138, 68, 0.75); }
+        }
+        @keyframes admin-bar-move {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      </style>
+      
+      <div style="position: relative; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.75rem;">
+        <div style="
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          border: 3px solid transparent;
+          border-top-color: #27866e;
+          border-right-color: #c48a44;
+          box-shadow: 0 0 20px rgba(39, 134, 110, 0.4);
+          animation: admin-spin-outer 1.2s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+        "></div>
+        <div style="
+          position: absolute;
+          inset: 12px;
+          border-radius: 50%;
+          border: 2px dashed transparent;
+          border-bottom-color: #d8a25f;
+          border-left-color: #185948;
+          animation: admin-spin-inner 1.8s linear infinite;
+        "></div>
+        <div style="
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #124336 0%, #051914 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: admin-pulse-glow 2.2s ease-in-out infinite;
+          border: 1px solid rgba(216, 162, 95, 0.4);
+        ">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d8a25f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.45rem;">
+        <span style="font-size: 1.55rem; font-weight: 800; letter-spacing: 0.16em; color: #ffffff; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+          TAPCO ADMIN
+        </span>
+        <span style="font-size: 0.85rem; color: #d8a25f; font-weight: 600; letter-spacing: 0.04em;">
+          لوحة الإدارة المركزية والعمليات
+        </span>
+      </div>
+
+      <div style="width: 140px; height: 3.5px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden; margin-top: 1.75rem; position: relative;">
+        <div style="
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, #185948 0%, #d8a25f 50%, #27866e 100%);
+          border-radius: 9999px;
+          animation: admin-bar-move 1.4s ease-in-out infinite;
+        "></div>
+      </div>
+    </div>
+  </app-root>
 </body>
 </html>

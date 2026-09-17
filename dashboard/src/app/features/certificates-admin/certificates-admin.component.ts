@@ -60,15 +60,11 @@ import { AdminIconComponent } from '../../shared/components/admin-icon.component
         </div>
       }
 
-      <!-- PrimeNG ModalComponent -->
       <app-modal
         [visible]="showModal()"
         (visibleChange)="showModal.set($event)"
-        
         [header]="modalMode() === 'create' ? 'إضافة شهادة جودة جديدة' : 'تعديل بيانات الشهادة'"
-        [style]="{ width: '90vw', maxWidth: '480px' }"
-        
-        
+        size="md"
         [dismissable]="true"
       >
         <div class="dialog-content-body pt-2">

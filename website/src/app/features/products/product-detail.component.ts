@@ -7,15 +7,16 @@ import { Product } from '../../core/models/tapco.models';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { IconComponent } from '../../shared/components/icon.component';
 
+import { LoaderComponent } from '../../shared/components/loader/loader.component';
+
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [RouterLink, FormsModule, ProductCardComponent, IconComponent],
+  imports: [RouterLink, FormsModule, ProductCardComponent, IconComponent, LoaderComponent],
   template: `
     @if (isLoading()) {
       <div class="loading-container">
-        <div class="spinner"></div>
-        <p>{{ i18n.currentLang() === 'ar' ? 'جاري تحميل تفاصيل المنتج...' : 'Loading product details...' }}</p>
+        <app-loader size="lg" [text]="i18n.currentLang() === 'ar' ? 'جاري تحميل تفاصيل ومواصفات المركب...' : 'Loading agrochemical specifications...'" />
       </div>
     } @else if (!product()) {
       <div class="tapco-container section-padding">
@@ -613,22 +614,54 @@ import { IconComponent } from '../../shared/components/icon.component';
 
     .modal-dialog {
       width: 100%;
-      max-width: 500px;
-      padding: 2rem;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+      &::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+      }
+      padding: 2.25rem 2.25rem 2.5rem;
       background: #ffffff;
-      box-shadow: var(--shadow-lg);
+      border-radius: var(--radius-lg, 16px);
+      box-shadow: 0 24px 60px rgba(10, 38, 30, 0.22);
+      animation: modalFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     .modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 1.25rem;
-      h3 { font-size: 1.25rem; color: var(--tapco-green-900); }
+      margin-bottom: 1.5rem;
+      h3 { font-size: 1.3rem; font-weight: 700; color: var(--tapco-green-900); margin: 0; }
     }
 
     .close-modal-btn {
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      border: 1px solid var(--tapco-border);
+      background: #f8faf9;
       color: var(--tapco-text-muted);
+      cursor: pointer;
+      transition: var(--transition-fast);
+
+      &:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        color: #b91c1c;
+      }
     }
 
     .modal-prod-summary {
